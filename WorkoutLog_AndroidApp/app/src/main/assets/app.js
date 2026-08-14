@@ -1,5 +1,5 @@
 /**
- * Workout Tracker - Core Application Logic (With Health Metrics, AI Recommendations, Nutrition & Google Sheets Auto-Sync)
+ * Workout Tracker - Core Application Logic (With Health Metrics, AI Recommendations, Nutrition & Multi-User Distinction)
  */
 
 // Initial Seed Data for Demonstration
@@ -7,6 +7,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-101",
     date: "2026-08-14",
+    userName: "정은호",
     category: "weight",
     name: "벤치프레스 (Bench Press)",
     sets: [
@@ -20,6 +21,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-102",
     date: "2026-08-14",
+    userName: "정은호",
     category: "bodyweight",
     name: "풀업 (Pull-ups)",
     sets: [
@@ -33,6 +35,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-103",
     date: "2026-08-13",
+    userName: "정은호",
     category: "cardio",
     name: "야외 러닝 (Outdoor Run)",
     sets: [
@@ -43,6 +46,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-104",
     date: "2026-08-12",
+    userName: "정은호",
     category: "weight",
     name: "바벨 스쿼트 (Barbell Squat)",
     sets: [
@@ -56,6 +60,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-105",
     date: "2026-08-11",
+    userName: "홍길동",
     category: "bodyweight",
     name: "딥스 (Dips)",
     sets: [
@@ -68,6 +73,7 @@ const DEFAULT_WORKOUT_DATA = [
   {
     id: "w-106",
     date: "2026-08-10",
+    userName: "홍길동",
     category: "weight",
     name: "데드리프트 (Deadlift)",
     sets: [
@@ -104,8 +110,9 @@ class WorkoutApp {
   constructor() {
     this.workouts = JSON.parse(localStorage.getItem('workout_tracker_data')) || DEFAULT_WORKOUT_DATA;
     
-    // User Profile Health Info
+    // User Profile Health Info with Name for Multi-User distinction
     const profile = JSON.parse(localStorage.getItem('workout_user_profile')) || {
+      name: '정은호',
       height: 175,
       weight: 70,
       gender: 'male',
@@ -113,7 +120,7 @@ class WorkoutApp {
     };
     this.userProfile = profile;
 
-    // Google Sheets Auto-Sync Settings (Defaulted to user's URL & AutoSync = True)
+    // Google Sheets Auto-Sync Settings
     this.sheetsWebAppUrl = localStorage.getItem('workout_sheets_url') || USER_DEFAULT_SHEETS_URL;
     const storedAutoSync = localStorage.getItem('workout_sheets_autosync');
     this.sheetsAutoSync = storedAutoSync !== null ? (storedAutoSync === 'true') : true;
@@ -123,6 +130,7 @@ class WorkoutApp {
     this.editingWorkoutId = null;
     this.selectedCategory = 'weight';
     this.selectedNutritionGoal = 'hypertrophy';
+    this.activeUserFilter = 'all'; // 'all' or specific userName
     this.volumeChart = null;
     this.categoryChart = null;
 
@@ -132,6 +140,7 @@ class WorkoutApp {
   init() {
     this.saveData();
     this.bindEvents();
+    this.updateUserFilterDropdown();
     this.renderSelectedDate();
     this.renderDailyWorkouts();
     this.renderCalendar();
@@ -154,6 +163,30 @@ class WorkoutApp {
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const day = String(dateObj.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  updateUserFilterDropdown() {
+    const select = document.getElementById('user-filter-select');
+    if (!select) return;
+
+    const userNames = new Set();
+    if (this.userProfile && this.userProfile.name) {
+      userNames.add(this.userProfile.name);
+    }
+    this.workouts.forEach(w => {
+      userNames.add(w.userName || '정은호');
+    });
+
+    const currentVal = this.activeUserFilter || 'all';
+    
+    let optionsHTML = `<option value="all">🌐 전체 사용자 보기</option>`;
+    userNames.forEach(name => {
+      const count = this.workouts.filter(w => (w.userName || '정은호') === name).length;
+      optionsHTML += `<option value="${this.escapeHtml(name)}">👤 ${this.escapeHtml(name)} (${count}개 기록)</option>`;
+    });
+
+    select.innerHTML = optionsHTML;
+    select.value = currentVal;
   }
 
   // --- Health Metrics & BMI Calculations ---
@@ -196,10 +229,11 @@ class WorkoutApp {
     const stdW = this.calculateStandardWeight();
     const bmr = this.calculateBMR();
     const tdee = this.calculateTDEE();
+    const userName = this.userProfile.name || '정은호';
 
     const navText = document.getElementById('nav-profile-summary-text');
     if (navText) {
-      navText.textContent = `키: ${this.userProfile.height}cm | 체중: ${this.userProfile.weight}kg (BMI: ${bmi} ${cat.text})`;
+      navText.textContent = `[${userName}] 키: ${this.userProfile.height}cm | 체중: ${this.userProfile.weight}kg (BMI: ${bmi} ${cat.text})`;
     }
 
     if (document.getElementById('res-bmi-val')) {
@@ -253,12 +287,13 @@ class WorkoutApp {
     return Math.round(totalKcal);
   }
 
-  // --- Google Sheets Sync Engine ---
+  // --- Google Sheets Sync Engine (With User Distinction) ---
   sendToGoogleSheets(workoutItem) {
     if (!this.sheetsWebAppUrl || !this.sheetsAutoSync) return;
 
     const payload = {
       ...workoutItem,
+      userName: workoutItem.userName || this.userProfile.name || '정은호',
       calories: this.calculateWorkoutCalories(workoutItem)
     };
 
@@ -284,6 +319,7 @@ class WorkoutApp {
     this.workouts.forEach(item => {
       const payload = {
         ...item,
+        userName: item.userName || this.userProfile.name || '정은호',
         calories: this.calculateWorkoutCalories(item)
       };
       fetch(this.sheetsWebAppUrl, {
@@ -399,6 +435,19 @@ class WorkoutApp {
   }
 
   bindEvents() {
+    // User Filter Select Event
+    const userFilterEl = document.getElementById('user-filter-select');
+    if (userFilterEl) {
+      userFilterEl.addEventListener('change', (e) => {
+        this.activeUserFilter = e.target.value;
+        this.renderDailyWorkouts();
+        this.updateDashboardSummary();
+        this.renderCharts();
+        this.renderPRTable();
+        this.renderCalendar();
+      });
+    }
+
     // Open Google Sheets Modal
     document.getElementById('open-sheets-modal-btn').addEventListener('click', () => {
       document.getElementById('sheets-web-app-url').value = this.sheetsWebAppUrl;
@@ -433,6 +482,7 @@ class WorkoutApp {
 
     // Open Profile Modal
     document.getElementById('open-profile-modal-btn').addEventListener('click', () => {
+      document.getElementById('profile-name-input').value = this.userProfile.name || '정은호';
       document.getElementById('profile-height-input').value = this.userProfile.height;
       document.getElementById('profile-weight-input').value = this.userProfile.weight;
       document.getElementById('profile-gender-select').value = this.userProfile.gender || 'male';
@@ -449,8 +499,9 @@ class WorkoutApp {
       });
     });
 
-    ['profile-height-input', 'profile-weight-input', 'profile-gender-select', 'profile-age-input'].forEach(id => {
+    ['profile-name-input', 'profile-height-input', 'profile-weight-input', 'profile-gender-select', 'profile-age-input'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => {
+        this.userProfile.name = document.getElementById('profile-name-input').value.trim() || '정은호';
         this.userProfile.height = parseFloat(document.getElementById('profile-height-input').value) || 175;
         this.userProfile.weight = parseFloat(document.getElementById('profile-weight-input').value) || 70;
         this.userProfile.gender = document.getElementById('profile-gender-select').value;
@@ -462,13 +513,15 @@ class WorkoutApp {
     });
 
     document.getElementById('save-profile-btn').addEventListener('click', () => {
+      this.userProfile.name = document.getElementById('profile-name-input').value.trim() || '정은호';
       this.saveData();
+      this.updateUserFilterDropdown();
       this.renderDailyWorkouts();
       this.updateDashboardSummary();
       this.renderAIRecommendations();
       this.renderNutritionGuide();
       document.getElementById('profile-modal').classList.remove('active');
-      this.showToast("신체 정보 및 건강지표가 저장되었습니다.");
+      this.showToast(`사용자 프로필이 저장되었습니다 (${this.userProfile.name})`);
     });
 
     document.querySelectorAll('.goal-pill').forEach(pill => {
@@ -602,6 +655,7 @@ class WorkoutApp {
             }
           }
           this.saveData();
+          this.updateUserFilterDropdown();
           this.renderDailyWorkouts();
           this.updateDashboardSummary();
           this.updateHealthMetricsDisplay();
@@ -639,7 +693,18 @@ class WorkoutApp {
   }
 
   renderDailyWorkouts() {
-    const dailyItems = this.workouts.filter(item => item.date === this.selectedDate);
+    const filterUser = this.activeUserFilter || 'all';
+    
+    const dailyItems = this.workouts.filter(item => {
+      const isDateMatch = item.date === this.selectedDate;
+      if (!isDateMatch) return false;
+      if (filterUser !== 'all') {
+        const itemUser = item.userName || '정은호';
+        return itemUser === filterUser;
+      }
+      return true;
+    });
+
     const listContainer = document.getElementById('workout-list-container');
 
     if (dailyItems.length === 0) {
@@ -647,7 +712,7 @@ class WorkoutApp {
         <div class="empty-state">
           <i class="fas fa-dumbbell"></i>
           <h3>이날은 기록된 운동이 없습니다</h3>
-          <p>상단의 '+ 운동 기록 추가' 버튼을 눌러 운동 일지를 작성해보세요!</p>
+          <p>${filterUser !== 'all' ? `'${filterUser}' 님의 ` : ''}상단의 '+ 운동 기록 추가' 버튼을 눌러 일지를 작성해보세요!</p>
         </div>
       `;
       return;
@@ -660,6 +725,7 @@ class WorkoutApp {
       if (item.category === 'bodyweight') { categoryLabel = '맨몸운동'; categoryClass = 'bodyweight'; }
 
       const estimatedKcal = this.calculateWorkoutCalories(item);
+      const userName = item.userName || '정은호';
 
       let setRowsHTML = '';
       if (item.category === 'cardio') {
@@ -690,6 +756,7 @@ class WorkoutApp {
         <div class="workout-card category-${categoryClass}">
           <div class="workout-card-header">
             <div class="exercise-meta">
+              <span class="user-name-badge"><i class="fas fa-user"></i> ${this.escapeHtml(userName)}</span>
               <span class="category-badge ${categoryClass}">${categoryLabel}</span>
               <span class="calorie-badge" title="체중 ${this.userProfile.weight}kg 기준 추정 소모 칼로리"><i class="fas fa-fire"></i> 약 ${estimatedKcal} kcal</span>
               <h3 class="exercise-title">${this.escapeHtml(item.name)}</h3>
@@ -717,7 +784,13 @@ class WorkoutApp {
 
   updateDashboardSummary() {
     const todayStr = this.selectedDate;
-    const dailyItems = this.workouts.filter(w => w.date === todayStr);
+    const filterUser = this.activeUserFilter || 'all';
+
+    const dailyItems = this.workouts.filter(w => {
+      if (w.date !== todayStr) return false;
+      if (filterUser !== 'all') return (w.userName || '정은호') === filterUser;
+      return true;
+    });
 
     let totalVolume = 0;
     let totalCalories = 0;
@@ -735,7 +808,11 @@ class WorkoutApp {
     document.getElementById('dash-calories-val').textContent = totalCalories.toLocaleString();
     document.getElementById('dash-count-val').textContent = dailyItems.length;
 
-    const workoutDates = [...new Set(this.workouts.map(w => w.date))].sort().reverse();
+    const filteredWorkouts = filterUser === 'all'
+      ? this.workouts
+      : this.workouts.filter(w => (w.userName || '정은호') === filterUser);
+
+    const workoutDates = [...new Set(filteredWorkouts.map(w => w.date))].sort().reverse();
     let streak = 0;
     let checkDate = new Date();
     
@@ -773,7 +850,7 @@ class WorkoutApp {
       this.renderSetRowInputs(workoutToEdit.sets);
     } else {
       this.editingWorkoutId = null;
-      document.getElementById('modal-title-text').textContent = '새 운동 추가';
+      document.getElementById('modal-title-text').textContent = `새 운동 추가 (${this.userProfile.name || '정은호'})`;
       this.selectedCategory = 'weight';
       document.querySelectorAll('.cat-pill').forEach(p => {
         p.classList.toggle('selected', p.dataset.category === 'weight');
@@ -852,6 +929,7 @@ class WorkoutApp {
   saveWorkoutEntry() {
     const name = document.getElementById('exercise-name-input').value.trim();
     const memo = document.getElementById('exercise-memo-input').value.trim();
+    const currentUserName = this.userProfile.name || '정은호';
 
     if (!name) {
       alert("운동 종목명을 입력해주세요.");
@@ -890,6 +968,7 @@ class WorkoutApp {
       if (targetIndex !== -1) {
         this.workouts[targetIndex] = {
           ...this.workouts[targetIndex],
+          userName: currentUserName,
           category: this.selectedCategory,
           name,
           sets,
@@ -902,6 +981,7 @@ class WorkoutApp {
       const newEntry = {
         id: 'w-' + Date.now(),
         date: this.selectedDate,
+        userName: currentUserName,
         category: this.selectedCategory,
         name,
         sets,
@@ -909,7 +989,7 @@ class WorkoutApp {
       };
       this.workouts.unshift(newEntry);
       savedEntry = newEntry;
-      this.showToast("새 운동 기록이 추가되었습니다!");
+      this.showToast(`'${currentUserName}' 님의 새 운동 기록이 추가되었습니다!`);
     }
 
     if (savedEntry) {
@@ -918,6 +998,7 @@ class WorkoutApp {
 
     this.saveData();
     this.closeModal();
+    this.updateUserFilterDropdown();
     this.renderDailyWorkouts();
     this.updateDashboardSummary();
     this.renderCalendar();
@@ -935,6 +1016,7 @@ class WorkoutApp {
     if (confirm("정말 이 운동 기록을 삭제하시겠습니까?")) {
       this.workouts = this.workouts.filter(w => w.id !== id);
       this.saveData();
+      this.updateUserFilterDropdown();
       this.renderDailyWorkouts();
       this.updateDashboardSummary();
       this.renderCalendar();
@@ -951,7 +1033,8 @@ class WorkoutApp {
 
   renderVolumeChart() {
     const ctx = document.getElementById('volumeChartCanvas').getContext('2d');
-    
+    const filterUser = this.activeUserFilter || 'all';
+
     const dateMap = {};
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -961,6 +1044,7 @@ class WorkoutApp {
     }
 
     this.workouts.forEach(w => {
+      if (filterUser !== 'all' && (w.userName || '정은호') !== filterUser) return;
       if (dateMap[w.date] !== undefined && w.category !== 'cardio') {
         w.sets.forEach(s => {
           dateMap[w.date] += (Number(s.weight) || 0) * (Number(s.reps) || 0);
@@ -1007,9 +1091,11 @@ class WorkoutApp {
 
   renderCategoryChart() {
     const ctx = document.getElementById('categoryChartCanvas').getContext('2d');
+    const filterUser = this.activeUserFilter || 'all';
 
     const counts = { weight: 0, cardio: 0, bodyweight: 0 };
     this.workouts.forEach(w => {
+      if (filterUser !== 'all' && (w.userName || '정은호') !== filterUser) return;
       if (counts[w.category] !== undefined) counts[w.category]++;
     });
 
@@ -1039,14 +1125,16 @@ class WorkoutApp {
 
   renderPRTable() {
     const prContainer = document.getElementById('pr-grid-container');
+    const filterUser = this.activeUserFilter || 'all';
     const prMap = {};
 
     this.workouts.forEach(w => {
+      if (filterUser !== 'all' && (w.userName || '정은호') !== filterUser) return;
       if (w.category !== 'cardio') {
         w.sets.forEach(s => {
           const wgt = Number(s.weight) || 0;
           if (!prMap[w.name] || wgt > prMap[w.name].weight) {
-            prMap[w.name] = { weight: wgt, reps: s.reps, category: w.category };
+            prMap[w.name] = { weight: wgt, reps: s.reps, category: w.category, userName: w.userName || '정은호' };
           }
         });
       }
@@ -1054,7 +1142,7 @@ class WorkoutApp {
 
     const entries = Object.entries(prMap);
     if (entries.length === 0) {
-      prContainer.innerHTML = '<p style="color:var(--text-muted)">기록된 웨이트/맨몸 운동 최고 기록이 없습니다.</p>';
+      prContainer.innerHTML = `<p style="color:var(--text-muted); padding:10px;">${filterUser !== 'all' ? `'${filterUser}' 님의 ` : ''}기록된 웨이트/맨몸 운동 최고 기록이 없습니다.</p>`;
       return;
     }
 
@@ -1062,7 +1150,7 @@ class WorkoutApp {
       <div class="pr-item">
         <div>
           <div class="pr-item-name">${this.escapeHtml(name)}</div>
-          <div class="pr-item-category">${record.category === 'weight' ? '웨이트' : '맨몸운동'}</div>
+          <div class="pr-item-category"><i class="fas fa-user" style="font-size:0.75rem; margin-right:4px;"></i>${this.escapeHtml(record.userName)} (${record.category === 'weight' ? '웨이트' : '맨몸운동'})</div>
         </div>
         <div class="pr-item-record">${record.weight} kg <span style="font-size:0.8rem;color:var(--text-muted)">(${record.reps}회)</span></div>
       </div>
@@ -1073,6 +1161,7 @@ class WorkoutApp {
   renderCalendar() {
     const year = this.currentCalendarDate.getFullYear();
     const month = this.currentCalendarDate.getMonth();
+    const filterUser = this.activeUserFilter || 'all';
 
     document.getElementById('cal-month-title').textContent = `${year}년 ${month + 1}월`;
 
@@ -1097,9 +1186,13 @@ class WorkoutApp {
       if (dateStr === todayStr) cell.classList.add('today');
       if (dateStr === this.selectedDate) cell.classList.add('selected');
 
-      const dayWorkouts = this.workouts.filter(w => w.date === dateStr);
-      const categoriesDone = [...new Set(dayWorkouts.map(w => w.category))];
+      const dayWorkouts = this.workouts.filter(w => {
+        if (w.date !== dateStr) return false;
+        if (filterUser !== 'all') return (w.userName || '정은호') === filterUser;
+        return true;
+      });
 
+      const categoriesDone = [...new Set(dayWorkouts.map(w => w.category))];
       const dotsHTML = categoriesDone.map(c => `<span class="dot ${c}"></span>`).join('');
 
       cell.innerHTML = `

@@ -98,6 +98,12 @@
           <span class="today-badge" id="today-badge-el">TODAY</span>
         </div>
         <div class="date-controls">
+          <div class="user-filter-box" style="display:flex; align-items:center; gap:6px; margin-right:4px;">
+            <i class="fas fa-user-tag" style="color:var(--weight-color); font-size:0.9rem;"></i>
+            <select id="user-filter-select" class="form-control" style="padding:4px 10px; font-size:0.85rem; width:auto; height:36px; font-weight:600; cursor:pointer;" title="특정 사용자의 운동 일지만 선택 필터링">
+              <option value="all">🌐 전체 사용자 보기</option>
+            </select>
+          </div>
           <button class="icon-btn" id="prev-date-btn" title="이전 날짜"><i class="fas fa-chevron-left"></i></button>
           <button class="secondary-btn btn-sm" id="today-date-btn">오늘</button>
           <button class="icon-btn" id="next-date-btn" title="다음 날짜"><i class="fas fa-chevron-right"></i></button>
