@@ -387,7 +387,7 @@
   var data = JSON.parse(e.postData.contents);
   
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["날짜", "카테고리", "운동종목", "세트수", "세트상세", "추정소모칼로리(kcal)", "메모"]);
+    sheet.appendRow(["날짜", "사용자이름", "카테고리", "운동종목", "세트수", "세트상세", "추정소모칼로리(kcal)", "메모"]);
   }
   
   var setsDetail = data.sets.map(function(s, idx) {
@@ -396,6 +396,7 @@
   
   sheet.appendRow([
     data.date,
+    data.userName || "기본사용자",
     data.category,
     data.name,
     data.sets.length,
@@ -426,6 +427,12 @@
       </div>
       <div class="modal-body">
         
+        <!-- User Name Input -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="profile-name-input">사용자 이름 / 닉네임 (구글 시트 사용자 구분용)</label>
+          <input type="text" id="profile-name-input" class="form-control" value="정은호" placeholder="예: 정은호, 홍길동, User A 등">
+        </div>
+
         <!-- Form Inputs -->
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
           <div class="form-group" style="margin-bottom:0">

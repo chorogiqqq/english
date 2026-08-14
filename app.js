@@ -104,8 +104,9 @@ class WorkoutApp {
   constructor() {
     this.workouts = JSON.parse(localStorage.getItem('workout_tracker_data')) || DEFAULT_WORKOUT_DATA;
     
-    // User Profile Health Info
+    // User Profile Health Info with Name for Multi-User distinction
     const profile = JSON.parse(localStorage.getItem('workout_user_profile')) || {
+      name: '정은호',
       height: 175,
       weight: 70,
       gender: 'male',
@@ -113,7 +114,7 @@ class WorkoutApp {
     };
     this.userProfile = profile;
 
-    // Google Sheets Auto-Sync Settings (Defaulted to user's URL & AutoSync = True)
+    // Google Sheets Auto-Sync Settings
     this.sheetsWebAppUrl = localStorage.getItem('workout_sheets_url') || USER_DEFAULT_SHEETS_URL;
     const storedAutoSync = localStorage.getItem('workout_sheets_autosync');
     this.sheetsAutoSync = storedAutoSync !== null ? (storedAutoSync === 'true') : true;
@@ -196,10 +197,11 @@ class WorkoutApp {
     const stdW = this.calculateStandardWeight();
     const bmr = this.calculateBMR();
     const tdee = this.calculateTDEE();
+    const userName = this.userProfile.name || '정은호';
 
     const navText = document.getElementById('nav-profile-summary-text');
     if (navText) {
-      navText.textContent = `키: ${this.userProfile.height}cm | 체중: ${this.userProfile.weight}kg (BMI: ${bmi} ${cat.text})`;
+      navText.textContent = `[${userName}] 키: ${this.userProfile.height}cm | 체중: ${this.userProfile.weight}kg (BMI: ${bmi} ${cat.text})`;
     }
 
     if (document.getElementById('res-bmi-val')) {
@@ -253,12 +255,13 @@ class WorkoutApp {
     return Math.round(totalKcal);
   }
 
-  // --- Google Sheets Sync Engine ---
+  // --- Google Sheets Sync Engine (With User Distinction) ---
   sendToGoogleSheets(workoutItem) {
     if (!this.sheetsWebAppUrl || !this.sheetsAutoSync) return;
 
     const payload = {
       ...workoutItem,
+      userName: this.userProfile.name || '정은호',
       calories: this.calculateWorkoutCalories(workoutItem)
     };
 
@@ -284,6 +287,7 @@ class WorkoutApp {
     this.workouts.forEach(item => {
       const payload = {
         ...item,
+        userName: this.userProfile.name || '정은호',
         calories: this.calculateWorkoutCalories(item)
       };
       fetch(this.sheetsWebAppUrl, {
@@ -433,6 +437,7 @@ class WorkoutApp {
 
     // Open Profile Modal
     document.getElementById('open-profile-modal-btn').addEventListener('click', () => {
+      document.getElementById('profile-name-input').value = this.userProfile.name || '정은호';
       document.getElementById('profile-height-input').value = this.userProfile.height;
       document.getElementById('profile-weight-input').value = this.userProfile.weight;
       document.getElementById('profile-gender-select').value = this.userProfile.gender || 'male';
@@ -449,8 +454,9 @@ class WorkoutApp {
       });
     });
 
-    ['profile-height-input', 'profile-weight-input', 'profile-gender-select', 'profile-age-input'].forEach(id => {
+    ['profile-name-input', 'profile-height-input', 'profile-weight-input', 'profile-gender-select', 'profile-age-input'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => {
+        this.userProfile.name = document.getElementById('profile-name-input').value.trim() || '정은호';
         this.userProfile.height = parseFloat(document.getElementById('profile-height-input').value) || 175;
         this.userProfile.weight = parseFloat(document.getElementById('profile-weight-input').value) || 70;
         this.userProfile.gender = document.getElementById('profile-gender-select').value;
@@ -462,13 +468,14 @@ class WorkoutApp {
     });
 
     document.getElementById('save-profile-btn').addEventListener('click', () => {
+      this.userProfile.name = document.getElementById('profile-name-input').value.trim() || '정은호';
       this.saveData();
       this.renderDailyWorkouts();
       this.updateDashboardSummary();
       this.renderAIRecommendations();
       this.renderNutritionGuide();
       document.getElementById('profile-modal').classList.remove('active');
-      this.showToast("신체 정보 및 건강지표가 저장되었습니다.");
+      this.showToast("사용자 정보 및 건강지표가 저장되었습니다.");
     });
 
     document.querySelectorAll('.goal-pill').forEach(pill => {
