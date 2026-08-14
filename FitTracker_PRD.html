@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>FitTracker (핏트래커) - PRD 제품 요구사항 정의서</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      line-height: 1.6;
+      color: #1e293b;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background-color: #f8fafc;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #0f172a;
+      border-bottom: 3px solid #8b5cf6;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #475569;
+      margin-top: 28px;
+      margin-bottom: 14px;
+      border-left: 4px solid #8b5cf6;
+      padding-left: 10px;
+    }
+
+    h3 {
+      font-size: 15px;
+      color: #0f172a;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    p, li {
+      font-size: 14px;
+      color: #334155;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .badge {
+      background: #e0e7ff;
+      color: #4338ca;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .print-btn-bar {
+      margin-bottom: 20px;
+      text-align: right;
+    }
+
+    .print-btn {
+      background: #8b5cf6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+      .print-btn-bar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-btn-bar">
+    <button class="print-btn" onclick="window.print()">🖨️ PDF로 저장하기 (Print to PDF)</button>
+  </div>
+
+  <div class="container">
+    <h1>📜 [PRD] FitTracker (핏트래커) - 제품 요구사항 정의서</h1>
+    
+    <p><strong>문서 버전:</strong> v1.0.0 &nbsp;|&nbsp; <strong>작성일자:</strong> 2026년 8월 14일</p>
+    <p><strong>저장소:</strong> <a href="https://github.com/chorogiqqq/hiq11" target="_blank">https://github.com/chorogiqqq/hiq11</a></p>
+
+    <h2>1. 개요 (Product Overview)</h2>
+    <p><strong>FitTracker(핏트래커)</strong>는 웨이트 트레이닝, 맨몸 운동, 유산소 운동을 세트 단위로 정밀하게 기록하고, 다중 사용자 구분, 구글 스프레드시트 실시간 클라우드 연동, AI 루틴 추천 및 1:1 맞춤 영양 계산을 제공하는 크로스 플랫폼 피트니스 관리 솔루션입니다.</p>
+
+    <h2>2. 주요 기능 명세 (Core Features)</h2>
+    
+    <h3>A. 운동 기록 및 일일 일지 (Daily Log)</h3>
+    <ul>
+      <li><strong>웨이트 / 맨몸</strong>: 세트별 중량(kg) x 횟수(회) x 총 볼륨(kg) 산출</li>
+      <li><strong>유산소</strong>: 세트별 시간(분) x 거리(km) x 소모 칼로리(kcal) 계산</li>
+      <li><strong>MET 칼로리 자동 계산</strong>: 사용자 체중 및 강도 기반 칼로리 소모량 산출</li>
+    </ul>
+
+    <h3>B. 다중 사용자 구분 시스템 (Multi-User System)</h3>
+    <ul>
+      <li><strong>작성자 태그 배지</strong>: 운동 카드에 작성자 배지(<span class="badge">👤 정은호</span>, <span class="badge">👤 홍길동</span>) 표시</li>
+      <li><strong>작성자 선택 / 추가 모달</strong>: 운동 입력 시 사용자 선택 및 새 사용자 추가 기능</li>
+      <li><strong>상단 사용자 필터</strong>: 특정 사용자의 일지, 볼륨, 차트, PR, 달력만 선택 조회 지원</li>
+    </ul>
+
+    <h3>C. 구글 시트 연동 & 클라우드 복구 (Cloud Sync)</h3>
+    <ul>
+      <li><strong>doPost 실시간 연동</strong>: 운동 입력 즉시 구글 스프레드시트로 자동 전송</li>
+      <li><strong>doGet 1초 전체 복구</strong>: <code>📥 구글 시트에서 전체 기록 가져오기</code>로 누적 데이터 100% 복구</li>
+    </ul>
+
+    <h3>D. 대시보드 & 통계 (Analytics & PR)</h3>
+    <ul>
+      <li><strong>7일 볼륨 추이 그래프</strong> 및 <strong>운동 종목 비율 차트</strong> (Chart.js)</li>
+      <li><strong>종목별 최고 중량 기록 (PR)</strong> 카드 표출 및 <strong>월간 달력 캘린더</strong> 연동</li>
+    </ul>
+
+    <h2>3. 기술 스택 (Tech Stack)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th>기술 스택</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Frontend</strong></td>
+          <td>HTML5, Vanilla CSS3, JavaScript (ES6+)</td>
+          <td>Dark/Light Theme, Responsive PWA</td>
+        </tr>
+        <tr>
+          <td><strong>Charts</strong></td>
+          <td>Chart.js v4.4</td>
+          <td>Line & Doughnut Charts</td>
+        </tr>
+        <tr>
+          <td><strong>Mobile Native</strong></td>
+          <td>Android Studio (Kotlin, WebView Wrapper)</td>
+          <td>Standalone APK Output (app-debug.apk)</td>
+        </tr>
+        <tr>
+          <td><strong>Cloud Sync</strong></td>
+          <td>Google Apps Script (GAS) Web App API</td>
+          <td>doPost & doGet REST Endpoints</td>
+        </tr>
+        <tr>
+          <td><strong>Hosting</strong></td>
+          <td>GitHub Repository & Vercel / GitHub Pages</td>
+          <td>https://github.com/chorogiqqq/hiq11</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. 버셀 (Vercel) 배포 및 공유 안내</h2>
+    <ol>
+      <li><strong><a href="https://vercel.com" target="_blank">Vercel.com</a></strong> 접속 후 <strong>Continue with GitHub</strong>으로 1초 로그인합니다.</li>
+      <li><strong>Add New Project</strong> ➔ 깃허브 저장소 <strong>chorogiqqq/hiq11</strong>을 선택하고 <strong>Import</strong>를 누릅니다.</li>
+      <li><strong>Deploy</strong> 버튼을 누르면 약 15초 만에 <strong>https://hiq11.vercel.app</strong> 인터넷 전용 주소가 바로 생성됩니다!</li>
+    </ol>
+  </div>
+
+</body>
+</html>
