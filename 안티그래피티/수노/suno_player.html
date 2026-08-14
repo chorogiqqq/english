@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suno AI - 내 손으로 세상을 움직일 거야 (실시간 가사 플레이어)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #31104b 100%);
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent-purple: #a855f7;
+      --accent-cyan: #06b6d4;
+      --accent-glow: rgba(168, 85, 247, 0.35);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .player-card {
+      width: 100%;
+      max-width: 900px;
+      height: 680px;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px var(--accent-glow);
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      overflow: hidden;
+    }
+
+    /* 왼쪽 앨범 아트 & 컨트롤 영역 */
+    .left-panel {
+      background: rgba(0, 0, 0, 0.2);
+      border-right: 1px solid var(--glass-border);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .album-art {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background-image: url('cover_art.svg');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+      animation: spin 20s linear infinite;
+      animation-play-state: paused;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .album-art.playing {
+      animation-play-state: running;
+    }
+
+    .album-art::before {
+      content: '';
+      width: 60px;
+      height: 60px;
+      background: #0f172a;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .song-info {
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .song-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .song-artist {
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      font-weight: 500;
+    }
+
+    /* 오디오 트랙 컨트롤 */
+    .controls {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .time-bar-container {
+      width: 100%;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+      border-radius: 10px;
+      transition: width 0.1s linear;
+    }
+
+    .time-stamps {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-top: 6px;
+    }
+
+    .btn-play {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-purple), #ec4899);
+      color: white;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-play:hover {
+      transform: scale(1.08);
+      box-shadow: 0 12px 28px rgba(168, 85, 247, 0.6);
+    }
+
+    /* 오른쪽 가사 영역 */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .section-nav {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .section-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-sub);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .section-chip:hover {
+      background: rgba(168, 85, 247, 0.2);
+      color: #fff;
+    }
+
+    .lyrics-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px 32px;
+      scroll-behavior: smooth;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .lyrics-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .lyrics-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+    }
+
+    .section-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 1px;
+      margin-top: 12px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .lyric-line {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      line-height: 1.5;
+    }
+
+    .lyric-line:hover {
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .lyric-line.active {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.25), transparent);
+      border-left: 4px solid var(--accent-purple);
+      padding-left: 16px;
+      text-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+    }
+
+    @media (max-width: 768px) {
+      .player-card {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-height: 90vh;
+      }
+      .left-panel {
+        padding: 20px;
+      }
+      .album-art {
+        width: 120px;
+        height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player-card">
+    <!-- 왼쪽 조작부 -->
+    <div class="left-panel">
+      <div class="album-art" id="albumArt"></div>
+      
+      <div class="song-info">
+        <div class="song-title">내 손으로 세상을 움직일 거야</div>
+        <div class="song-artist">lisicac109 • Suno AI</div>
+      </div>
+
+      <div class="controls">
+        <div class="time-bar-container">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="time-stamps">
+            <span id="currentTime">00:00</span>
+            <span id="duration">02:35</span>
+          </div>
+        </div>
+
+        <button class="btn-play" id="btnPlay">▶</button>
+      </div>
+    </div>
+
+    <!-- 오른쪽 가사 싱크부 -->
+    <div class="right-panel">
+      <div class="section-nav" id="sectionNav">
+        <!-- 섹션 바로가기 버튼 동적 생성 -->
+      </div>
+      
+      <div class="lyrics-container" id="lyricsContainer">
+        <!-- 싱크 가사 동적 출력 -->
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" src="내 손으로 세상을 움직일 거야.mp3"></audio>
+
+  <script>
+    const lrcData = [
+      { sec: "[Intro]", time: 0.0, text: "♪ (Intro - 반주 시작)" },
+      { sec: "[Verse 1]", time: 10.45, text: "사흘 동안 붙잡은 마음" },
+      { time: 12.60, text: "새벽보다 먼저 일어났지" },
+      { time: 15.08, text: "낯선 코드 앞에 앉아도" },
+      { time: 17.55, text: "오늘은 다르게 반짝이지" },
+      
+      { sec: "[Pre-Chorus]", time: 20.26, text: "에러 하나에 멈춰 서도" },
+      { time: 22.97, text: "다시 손끝으로 길을 찾아" },
+      { time: 25.37, text: "조금 느려도 괜찮아" },
+      { time: 27.92, text: "너는 이미 여기까지 와" },
+      { time: 30.16, text: "숨 한번 크게 쉬어" },
+      { time: 33.03, text: "지금부터가 더 좋아" },
+      { time: 35.50, text: "어제의 나를 넘어서" },
+      { time: 37.02, text: "한 걸음 더 가보자" },
+      
+      { sec: "[Chorus 1]", time: 40.21, text: "잘하고 있어, 잘하고 있어" },
+      { time: 43.08, text: "오늘의 너를 믿어" },
+      { time: 45.55, text: "포기 말고, 포기 말고" },
+      { time: 48.51, text: "끝까지 달려가" },
+      { time: 50.34, text: "잘하고 있어, 잘하고 있어" },
+      { time: 53.29, text: "사흘의 땀이 빛나" },
+      { time: 56.64, text: "교육생 여러분" },
+      { time: 58.72, text: "우린 더 멀리 가" },
+      
+      { sec: "[Verse 2]", time: 60.15, text: "모르는 건 질문하면 돼" },
+      { time: 61.51, text: "부끄러움은 내려놔" },
+      { time: 66.00, text: "♪ (간주)" },
+      { time: 71.32, text: "같이 웃고 같이 풀면" },
+      { time: 73.88, text: "어려운 길도 짧아져" },
+      { time: 76.75, text: "메모장에 적은 꿈들" },
+      { time: 78.82, text: "한 줄씩 살아나고 있어" },
+      { time: 81.54, text: "작은 성공 하나마다" },
+      { time: 84.09, text: "가슴이 더 크게 뛰어" },
+      
+      { sec: "[Pre-Chorus 2]", time: 86.40, text: "손을 들고 외쳐 봐" },
+      { time: 89.20, text: "우린 혼자가 아니야" },
+      { time: 91.67, text: "망설임을 걷어내고" },
+      { time: 94.30, text: "오늘을 잡아보자" },
+      
+      { sec: "[Chorus 2]", time: 95.98, text: "잘하고 있어, 잘하고 있어" },
+      { time: 99.25, text: "오늘의 너를 믿어" },
+      { time: 101.72, text: "포기 말고, 포기 말고" },
+      { time: 104.68, text: "끝까지 달려가" },
+      { time: 106.51, text: "잘하고 있어, 잘하고 있어" },
+      { time: 109.46, text: "사흘의 땀이 빛나" },
+      { time: 112.81, text: "교육생 여러분" },
+      { time: 114.89, text: "우린 더 멀리 가" },
+      
+      { sec: "[Bridge]", time: 117.92, text: "처음엔 서툴러도" },
+      { time: 119.84, text: "익숙해질 거야" },
+      { time: 122.39, text: "넘어진 자리 위로" },
+      { time: 124.78, text: "더 단단해질 거야" },
+      
+      { sec: "[Chorus 3]", time: 129.89, text: "잘하고 있어, 잘하고 있어" },
+      { time: 132.44, text: "오늘의 너를 믿어" },
+      { time: 134.84, text: "포기 말고, 포기 말고" },
+      { time: 137.87, text: "끝까지 달려가" },
+      { time: 139.70, text: "잘하고 있어, 잘하고 있어" },
+      { time: 142.73, text: "사흘의 불꽃으로" },
+      { time: 146.01, text: "교육생 여러분" },
+      { time: 148.08, text: "우린 더 멀리 가" },
+      
+      { sec: "[Outro]", time: 152.00, text: "♪ (Outro - 아웃트로)" }
+    ];
+
+    const audio = document.getElementById('audioPlayer');
+    const btnPlay = document.getElementById('btnPlay');
+    const albumArt = document.getElementById('albumArt');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const lyricsContainer = document.getElementById('lyricsContainer');
+    const sectionNav = document.getElementById('sectionNav');
+
+    let lineEls = [];
+    let activeIndex = -1;
+
+    // 가사 및 섹션 네비게이션 렌더링
+    function renderLyrics() {
+      lyricsContainer.innerHTML = '';
+      sectionNav.innerHTML = '';
+
+      lrcData.forEach((item, idx) => {
+        if (item.sec) {
+          const secHeader = document.createElement('div');
+          secHeader.className = 'section-header';
+          secHeader.textContent = item.sec;
+          lyricsContainer.appendChild(secHeader);
+
+          // 네비게이션 칩 생성
+          const chip = document.createElement('button');
+          chip.className = 'section-chip';
+          chip.textContent = item.sec;
+          chip.onclick = () => {
+            audio.currentTime = item.time;
+            if (audio.paused) audio.play();
+          };
+          sectionNav.appendChild(chip);
+        }
+
+        const line = document.createElement('div');
+        line.className = 'lyric-line';
+        line.textContent = item.text;
+        line.dataset.idx = idx;
+        line.onclick = () => {
+          audio.currentTime = item.time;
+          if (audio.paused) audio.play();
+        };
+
+        lyricsContainer.appendChild(line);
+        lineEls.push(line);
+      });
+    }
+
+    // 재생 / 일시정지 토글
+    btnPlay.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', () => {
+      btnPlay.textContent = '❚❚';
+      albumArt.classList.add('playing');
+    });
+
+    audio.addEventListener('pause', () => {
+      btnPlay.textContent = '▶';
+      albumArt.classList.remove('playing');
+    });
+
+    // 시간 포맷 (mm:ss)
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // 오디오 재생 시간 업데이트
+    audio.addEventListener('timeupdate', () => {
+      const cur = audio.currentTime;
+      const dur = audio.duration || 155;
+
+      currentTimeEl.textContent = formatTime(cur);
+      durationEl.textContent = formatTime(dur);
+      progressFill.style.width = `${(cur / dur) * 100}%`;
+
+      // 현재 가사 위치 찾기
+      let currentIdx = -1;
+      for (let i = 0; i < lrcData.length; i++) {
+        if (cur >= lrcData[i].time) {
+          currentIdx = i;
+        } else {
+          break;
+        }
+      }
+
+      if (currentIdx !== activeIndex && currentIdx !== -1) {
+        if (activeIndex !== -1 && lineEls[activeIndex]) {
+          lineEls[activeIndex].classList.remove('active');
+        }
+        activeIndex = currentIdx;
+        if (lineEls[activeIndex]) {
+          lineEls[activeIndex].classList.add('active');
+          lineEls[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+
+    // 프로그레스 바 클릭하여 재생 위치 이동
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const ratio = clickX / rect.width;
+      audio.currentTime = ratio * (audio.duration || 155);
+    });
+
+    // 초기화 실행
+    renderLyrics();
+  </script>
+</body>
+</html>

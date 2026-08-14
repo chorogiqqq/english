@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a16"/>
+      <stop offset="40%" stop-color="#121139"/>
+      <stop offset="80%" stop-color="#2a0845"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </linearGradient>
+
+    <!-- Core Glow Gradient -->
+    <radialGradient id="core-glow" cx="50%" cy="48%" r="45%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#9d4edd" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#f72585" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Globe Gradient -->
+    <linearGradient id="globe-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4cc9f0"/>
+      <stop offset="50%" stop-color="#7209b7"/>
+      <stop offset="100%" stop-color="#f72585"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="intense-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="25" result="blur1" />
+      <feGaussianBlur stdDeviation="10" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Layer -->
+  <rect width="800" height="800" fill="url(#bg-grad)"/>
+
+  <!-- Code Grid Pattern Background -->
+  <g opacity="0.12" fill="#00f2fe" font-family="monospace" font-size="14">
+    <text x="40" y="80">&lt;script&gt; const mind = '사흘 동안 붙잡은 마음'; &lt;/script&gt;</text>
+    <text x="40" y="120">function awake() { return '새벽보다 먼저 일어났지'; }</text>
+    <text x="40" y="160">const code = await learnNewCode(); // 낯선 코드 앞에 앉아도</text>
+    <text x="40" y="200">let status = '오늘의 너를 믿어'; // 잘하고 있어</text>
+    <text x="400" y="620">if (error) { keepGoing(); } // 에러 하나에 멈춰 서도</text>
+    <text x="400" y="660">const future = '우린 더 멀리 가';</text>
+    <text x="400" y="700">world.moveWithMyHands(); // 손끝으로 길을 찾아</text>
+  </g>
+
+  <!-- Floating Ambient Particles -->
+  <g filter="url(#glow)">
+    <circle cx="200" cy="180" r="4" fill="#4cc9f0" opacity="0.8"/>
+    <circle cx="650" cy="220" r="6" fill="#f72585" opacity="0.7"/>
+    <circle cx="150" cy="550" r="5" fill="#7209b7" opacity="0.9"/>
+    <circle cx="680" cy="580" r="3" fill="#4cc9f0" opacity="0.8"/>
+    <circle cx="400" cy="120" r="7" fill="#4361ee" opacity="0.7"/>
+  </g>
+
+  <!-- Central Glow Sphere -->
+  <circle cx="400" cy="380" r="220" fill="url(#core-glow)" />
+
+  <!-- Holographic Hologram Globe Grid -->
+  <g filter="url(#glow)" opacity="0.85">
+    <!-- Globe Outer Ring -->
+    <circle cx="400" cy="380" r="160" fill="none" stroke="url(#globe-grad)" stroke-width="3"/>
+
+    <!-- Latitude Ellipses -->
+    <ellipse cx="400" cy="380" rx="160" ry="50" fill="none" stroke="#4cc9f0" stroke-width="2" stroke-dasharray="8 6"/>
+    <ellipse cx="400" cy="380" rx="160" ry="100" fill="none" stroke="#7209b7" stroke-width="1.5"/>
+    <ellipse cx="400" cy="380" rx="160" ry="140" fill="none" stroke="#f72585" stroke-width="1.5" stroke-dasharray="12 8"/>
+
+    <!-- Longitude Ellipses -->
+    <ellipse cx="400" cy="380" rx="50" ry="160" fill="none" stroke="#4cc9f0" stroke-width="2" stroke-dasharray="6 4"/>
+    <ellipse cx="400" cy="380" rx="100" ry="160" fill="none" stroke="#7209b7" stroke-width="1.5"/>
+  </g>
+
+  <!-- Orbital Rings -->
+  <g filter="url(#intense-glow)">
+    <ellipse cx="400" cy="380" rx="220" ry="70" fill="none" stroke="#00f2fe" stroke-width="2.5" transform="rotate(-25 400 380)"/>
+    <ellipse cx="400" cy="380" rx="240" ry="80" fill="none" stroke="#f72585" stroke-width="2" transform="rotate(35 400 380)"/>
+  </g>
+
+  <!-- Hand Gestures (Conceptual Glowing Hands Framing the Globe) -->
+  <g filter="url(#intense-glow)">
+    <!-- Left Hand Energy Arc -->
+    <path d="M 180 500 C 220 460, 260 410, 300 420 C 280 450, 240 490, 210 540 Z" fill="url(#globe-grad)" opacity="0.8"/>
+    <!-- Right Hand Energy Arc -->
+    <path d="M 620 500 C 580 460, 540 410, 500 420 C 520 450, 560 490, 590 540 Z" fill="url(#globe-grad)" opacity="0.8"/>
+  </g>
+
+  <!-- Glowing Core Star Burst -->
+  <g filter="url(#intense-glow)">
+    <circle cx="400" cy="380" r="18" fill="#ffffff"/>
+    <polygon points="400,320 408,372 460,380 408,388 400,440 392,388 340,380 392,372" fill="#00f2fe"/>
+  </g>
+
+  <!-- Album Title Text -->
+  <g text-anchor="middle">
+    <!-- Subtitle / Artist -->
+    <text x="400" y="670" fill="#4cc9f0" font-family="'Pretendard', sans-serif" font-size="18" font-weight="700" letter-spacing="4" filter="url(#glow)">
+      LISICAC109 • SUNO AI
+    </text>
+
+    <!-- Main Title -->
+    <text x="400" y="725" fill="#ffffff" font-family="'Pretendard', sans-serif" font-size="34" font-weight="800" letter-spacing="2" filter="url(#intense-glow)">
+      내 손으로 세상을 움직일 거야
+    </text>
+
+    <!-- Tagline -->
+    <text x="400" y="760" fill="#b8c0e0" font-family="'Pretendard', sans-serif" font-size="14" font-weight="500" opacity="0.8">
+      "잘하고 있어, 오늘의 너를 믿어! 사흘의 불꽃으로 우린 더 멀리 가"
+    </text>
+  </g>
+</svg>

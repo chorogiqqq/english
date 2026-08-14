@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>파도와 교복 - 감성 가사 재생기</title>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background decorations -->
+  <div class="bg-decor">
+    <div class="decor-circle decor-1"></div>
+    <div class="decor-circle decor-2"></div>
+    <div class="decor-circle decor-3"></div>
+  </div>
+
+  <main class="app-container">
+    <!-- Left Panel: Player Controls & Visuals -->
+    <section class="player-panel">
+      <header class="app-header">
+        <div class="badge"><i class="fa-solid fa-compact-disc"></i> SUNO AI LYRICS PLAYER</div>
+        <h1 class="song-title" id="songTitle">파도와 교복</h1>
+        <p class="artist-name" id="artistName">Suno AI • 감성 K-POP</p>
+      </header>
+
+      <!-- Vinyl CD Spinning Graphic -->
+      <div class="album-art-wrapper" id="albumArt">
+        <div class="vinyl-disc">
+          <div class="vinyl-center">
+            <i class="fa-solid fa-music"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Timeline -->
+      <div class="controls-container">
+        <!-- Progress Bar -->
+        <div class="progress-group">
+          <div class="progress-bar-bg" id="progressBarBg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+          <div class="time-display">
+            <span id="currentTime">00:00</span>
+            <span id="durationTime">00:00</span>
+          </div>
+        </div>
+
+        <!-- Buttons Row -->
+        <div class="buttons-row">
+          <button class="btn-icon" id="btnLoop" title="반복 재생">
+            <i class="fa-solid fa-repeat"></i>
+          </button>
+          <button class="btn-icon" id="btnRewind" title="10초 뒤로">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          <button class="btn-icon btn-play" id="btnPlayPause" title="재생/일시정지">
+            <i class="fa-solid fa-play" id="playIcon"></i>
+          </button>
+          <button class="btn-icon" id="btnForward" title="10초 앞으로">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+          <button class="btn-icon" id="btnShuffle" title="가사 타임스탬프 이동 방식">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+        </div>
+
+        <!-- Volume & Speed Controls -->
+        <div class="extra-controls">
+          <div class="volume-group">
+            <button class="btn-icon" id="btnMute" style="width:28px; height:28px;" title="음소거">
+              <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+            </button>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8">
+          </div>
+          
+          <select class="speed-select" id="speedSelect" title="재생 속도">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x (보통)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Lyrics Viewport & Tabs -->
+    <section class="lyrics-panel">
+      <header class="lyrics-header">
+        <nav class="mode-tabs">
+          <button class="tab-btn active" data-mode="lrc"><i class="fa-solid fa-bolt"></i> 싱크 가사 (LRC)</button>
+          <button class="tab-btn" data-mode="txt"><i class="fa-solid fa-file-lines"></i> 전체 가사 (TXT)</button>
+          <button class="tab-btn" data-mode="srt"><i class="fa-solid fa-closed-captioning"></i> 자막 (SRT)</button>
+        </nav>
+
+        <label class="file-upload-label" for="fileInput" title="외부 파일 로드 (MP3, LRC, SRT, TXT)">
+          <i class="fa-solid fa-file-arrow-up"></i> 파일 불러오기
+        </label>
+        <input type="file" id="fileInput" accept=".mp3, .audio/*, .lrc, .srt, .txt" multiple>
+      </header>
+
+      <!-- Scrollable Lyrics Container -->
+      <div class="lyrics-viewport" id="lyricsViewport">
+        <!-- Dynamic lyrics lines rendered by app.js -->
+        <div class="lrc-container" id="lrcContainer"></div>
+        <div class="txt-container" id="txtContainer" style="display:none;"></div>
+        <div class="srt-container" id="srtContainer" style="display:none;"></div>
+      </div>
+
+      <!-- Floating Subtitle Overlay for SRT/LRC -->
+      <div class="srt-overlay-box" id="srtOverlayBox"></div>
+    </section>
+  </main>
+
+  <!-- Embedded Audio Element -->
+  <audio id="audioPlayer" src="파도.mp3" preload="metadata"></audio>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
