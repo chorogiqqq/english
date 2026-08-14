@@ -16,7 +16,7 @@ Thumbs.db
 /뼈대.html
 /새 폴더/
 # /안티그래피티/
-/안티그래피티/
+!/안티그래피티/영어단어 공부/
 *.venv/
 .venv/
 node_modules/
