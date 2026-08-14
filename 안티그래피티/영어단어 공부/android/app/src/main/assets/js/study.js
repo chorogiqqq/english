@@ -33,6 +33,7 @@ class StudyController {
     this.nextBtn = document.getElementById("studyNextBtn");
     this.audioBtnFront = document.getElementById("audioBtnFront");
     this.audioBtnBack = document.getElementById("audioBtnBack");
+    this.shuffleBtn = document.getElementById("shuffleBtn");
     this.autoPlayBtn = document.getElementById("autoPlayBtn");
     this.viewToggleBtn = document.getElementById("viewToggleBtn");
 
@@ -43,6 +44,7 @@ class StudyController {
   }
 
   bindEvents() {
+    if (this.shuffleBtn) this.shuffleBtn.addEventListener("click", () => this.shuffleCurrentWords());
     if (this.cardEl) {
       this.cardEl.addEventListener("click", (e) => {
         // Prevent flip if clicking audio or bookmark buttons directly
@@ -358,6 +360,19 @@ class StudyController {
       });
     });
   }
+
+  shuffleCurrentWords() {
+    if (!this.words || this.words.length <= 1) return;
+    for (let i = this.words.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.words[i], this.words[j]] = [this.words[j], this.words[i]];
+    }
+    this.currentIndex = 0;
+    this.renderCurrentWord();
+    if (this.viewMode === "list") this.renderListView();
+    if (window.showToast) window.showToast("🔀 오늘의 20단어 순서가 랜덤으로 섞였습니다!");
+  }
 }
+
 
 window.studyController = new StudyController();

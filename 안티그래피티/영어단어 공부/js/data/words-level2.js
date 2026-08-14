@@ -1,6 +1,6 @@
 /* ==========================================================================
    LEVEL 2 VOCABULARY DATA (Days 101 - 200 / Words 2,001 - 4,000)
-   Books, Literature, Bestsellers & Media Vocabulary (도서/소설/언론 자주 쓰이는 단어)
+   Books, Literature, Bestsellers & Media Vocabulary - Random Mixed Order
    ========================================================================== */
 
 (function() {
@@ -70,25 +70,19 @@
     ["authentic", "/ɔːˈθentɪk/", "형용사", "진정한, 진짜의", "The museum displays authentic historical artifacts.", "박물관은 진정한 역사적 유물들을 전시한다."]
   ];
 
-  const fullList = [];
+  const rawPool = [];
   const totalTarget = 2000;
 
   for (let i = 0; i < totalTarget; i++) {
-    const day = Math.floor(i / 20) + 101; // Days 101 to 200
-    const id = i + 2001; // IDs 2001 to 4000
-
     if (i < level2Seed.length) {
       const item = level2Seed[i];
-      fullList.push({
-        id: id,
+      rawPool.push({
         word: item.word,
         phonetic: item.phonetic,
         pos: item.pos,
         meaning: item.meaning,
         exampleEn: item.exampleEn,
-        exampleKo: item.exampleKo,
-        level: 2,
-        day: day
+        exampleKo: item.exampleKo
       });
     } else {
       const poolIdx = (i - level2Seed.length) % bookWordsPool.length;
@@ -104,22 +98,53 @@
 
       if (variantCycle > 0) {
         w = `${w} (${variantCycle + 1})`;
-        m = `${m} [도서어휘 ${id}]`;
+        m = `${m} [도서어휘]`;
       }
 
-      fullList.push({
-        id: id,
+      rawPool.push({
         word: w,
         phonetic: ph,
         pos: pos,
         meaning: m,
         exampleEn: exE,
-        exampleKo: exK,
-        level: 2,
-        day: day
+        exampleKo: exK
       });
     }
   }
+
+  function shuffleList(array, seed = 456) {
+    let m = array.length, t, i;
+    let s = seed;
+    const random = () => {
+      let x = Math.sin(s++) * 10000;
+      return x - Math.floor(x);
+    };
+    while (m) {
+      i = Math.floor(random() * m--);
+      t = array[m];
+      array[m] = array[i];
+      array[i] = t;
+    }
+    return array;
+  }
+
+  const shuffledPool = shuffleList(rawPool, 456);
+
+  const fullList = shuffledPool.map((item, i) => {
+    const id = i + 2001;
+    const day = Math.floor(i / 20) + 101; // Days 101 to 200
+    return {
+      id: id,
+      word: item.word,
+      phonetic: item.phonetic,
+      pos: item.pos,
+      meaning: item.meaning,
+      exampleEn: item.exampleEn,
+      exampleKo: item.exampleKo,
+      level: 2,
+      day: day
+    };
+  });
 
   window.WORDS_LEVEL2 = fullList;
 })();

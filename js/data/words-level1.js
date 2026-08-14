@@ -1,6 +1,6 @@
 /* ==========================================================================
    LEVEL 1 VOCABULARY DATA (Days 1 - 100 / Words 1 - 2,000)
-   Daily Life & Essential English Words (일상 필수 단어)
+   Daily Life & Essential English Words (일상 필수 단어) - Random Mixed Order
    ========================================================================== */
 
 (function() {
@@ -47,7 +47,6 @@
     { word: "appeal", phonetic: "/əˈpiːl/", pos: "동사/명사", meaning: "호소하다, 매력", exampleEn: "The game has wide appeal among young adults.", exampleKo: "그 게임은 젊은 성인들에게 큰 매력을 갖고 있다." }
   ];
 
-  // Oxford & COCA Daily Essential Word Base Vocabulary Pool
   const dailyWordsPool = [
     ["benefit", "/ˈbenɪfɪt/", "명사/동사", "혜택, 이익을 얻다", "The new policy will benefit local businesses.", "새 정책은 지역 기업들에게 혜택을 줄 것이다."],
     ["brief", "/briːf/", "형용사", "간결한, 짧은", "He gave a brief explanation of the project.", "그는 프로젝트에 대해 간결한 설명을 했다."],
@@ -67,7 +66,7 @@
     ["character", "/ˈkærəktər/", "명사", "성격, 등장인물, 특징", "Honesty is an essential human character trait.", "정직함은 필수적인 인간의 성격 특성이다."],
     ["charge", "/tʃɑːrdʒ/", "동사/명사", "청구하다, 책임, 충전하다", "You can charge your mobile phone here.", "여기서 휴대폰을 충전할 수 있습니다."],
     ["charity", "/ˈtʃærəti/", "명사", "자선 단체, 구호", "They donated money to a local children's charity.", "그들은 지역 아동 자선 단체에 돈을 기부했다."],
-    ["charming", "/ˈtʃɑːrmɪŋ/", "형용사", "매력적인, 멋진", "The town has a charming historical center.", "그 마을은 매력적인 역사 중심지를 갖추고 있다."],
+    ["charming", "/ˈtʃɑːrmɪŋ/", "형용사", "매력적인, 멋진", "The town has a charming historical center.", "그 마을은 매력적인 역사 중심지를 갖고 있다."],
     ["choice", "/tʃɔɪs/", "명사", "선택, 선택권", "You have the freedom of choice in your career.", "당신은 커리어에서 선택의 자유가 있습니다."],
     ["climate", "/ˈklaɪmət/", "명사", "기후, 풍토", "The tropical climate brings warm temperatures.", "열대 기후는 따뜻한 기온을 가져다준다."],
     ["colleague", "/ˈkɑːliːɡ/", "명사", "동료", "I discussed the plan with my colleague.", "나는 동료와 그 계획을 논의했다."],
@@ -81,26 +80,20 @@
     ["committee", "/kəˈmɪti/", "명사", "위원회", "The safety committee met to review safety rules.", "안전 위원회는 안전 규칙을 검토하기 위해 모였다."]
   ];
 
-  // Generate 2,000 items (Days 1..100, 20 items per day)
-  const fullList = [];
+  // Raw base array
+  const rawPool = [];
   const totalTarget = 2000;
 
   for (let i = 0; i < totalTarget; i++) {
-    const day = Math.floor(i / 20) + 1; // Days 1 to 100
-    const id = i + 1; // IDs 1 to 2000
-
     if (i < level1Seed.length) {
       const item = level1Seed[i];
-      fullList.push({
-        id: id,
+      rawPool.push({
         word: item.word,
         phonetic: item.phonetic,
         pos: item.pos,
         meaning: item.meaning,
         exampleEn: item.exampleEn,
-        exampleKo: item.exampleKo,
-        level: 1,
-        day: day
+        exampleKo: item.exampleKo
       });
     } else {
       const poolIdx = (i - level1Seed.length) % dailyWordsPool.length;
@@ -116,22 +109,55 @@
 
       if (variantCycle > 0) {
         w = `${w} (${variantCycle + 1})`;
-        m = `${m} [일일어휘 ${id}]`;
+        m = `${m} [일일어휘]`;
       }
 
-      fullList.push({
-        id: id,
+      rawPool.push({
         word: w,
         phonetic: ph,
         pos: pos,
         meaning: m,
         exampleEn: exE,
-        exampleKo: exK,
-        level: 1,
-        day: day
+        exampleKo: exK
       });
     }
   }
+
+  // Pseudo-random Fisher-Yates shuffle with fixed seed (123) for non-alphabetical mix
+  function shuffleList(array, seed = 123) {
+    let m = array.length, t, i;
+    let s = seed;
+    const random = () => {
+      let x = Math.sin(s++) * 10000;
+      return x - Math.floor(x);
+    };
+    while (m) {
+      i = Math.floor(random() * m--);
+      t = array[m];
+      array[m] = array[i];
+      array[i] = t;
+    }
+    return array;
+  }
+
+  const shuffledPool = shuffleList(rawPool, 123);
+
+  // Assign IDs and Days after shuffle
+  const fullList = shuffledPool.map((item, i) => {
+    const id = i + 1;
+    const day = Math.floor(i / 20) + 1; // Days 1 to 100
+    return {
+      id: id,
+      word: item.word,
+      phonetic: item.phonetic,
+      pos: item.pos,
+      meaning: item.meaning,
+      exampleEn: item.exampleEn,
+      exampleKo: item.exampleKo,
+      level: 1,
+      day: day
+    };
+  });
 
   window.WORDS_LEVEL1 = fullList;
 })();
