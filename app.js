@@ -97,6 +97,9 @@ const PRESET_EXERCISES = [
   { name: "줄줄이 줄넘기", category: "cardio", target: "전신유산소" }
 ];
 
+// User Configured Google Apps Script Endpoint
+const USER_DEFAULT_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzcAcTWwgUhHCvLRCGS4ItGw-ae5ONtIoJpvXjARA154niw2826cbkkXbh1OKu4NyUa_g/exec";
+
 class WorkoutApp {
   constructor() {
     this.workouts = JSON.parse(localStorage.getItem('workout_tracker_data')) || DEFAULT_WORKOUT_DATA;
@@ -110,9 +113,10 @@ class WorkoutApp {
     };
     this.userProfile = profile;
 
-    // Google Sheets Auto-Sync Settings
-    this.sheetsWebAppUrl = localStorage.getItem('workout_sheets_url') || '';
-    this.sheetsAutoSync = localStorage.getItem('workout_sheets_autosync') === 'true';
+    // Google Sheets Auto-Sync Settings (Defaulted to user's URL & AutoSync = True)
+    this.sheetsWebAppUrl = localStorage.getItem('workout_sheets_url') || USER_DEFAULT_SHEETS_URL;
+    const storedAutoSync = localStorage.getItem('workout_sheets_autosync');
+    this.sheetsAutoSync = storedAutoSync !== null ? (storedAutoSync === 'true') : true;
 
     this.selectedDate = this.getFormattedDate(new Date());
     this.currentCalendarDate = new Date();
@@ -908,7 +912,6 @@ class WorkoutApp {
       this.showToast("새 운동 기록이 추가되었습니다!");
     }
 
-    // Auto-sync to Google Sheets if configured
     if (savedEntry) {
       this.sendToGoogleSheets(savedEntry);
     }
