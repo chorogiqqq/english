@@ -10,7 +10,7 @@ Write-Host "==================================================" -ForegroundColor
 Write-Host "  6000 English Vocab App - Drive & GitHub Sync" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
-$projectDir = "c:\Users\USER\Desktop\3기 정은호\안티그래피티\영어단어 공부"
+$projectDir = Split-Path -Parent $PSScriptRoot
 Set-Location -Path $projectDir
 
 # 1. Git Status & Auto Commit
