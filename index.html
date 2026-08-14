@@ -532,6 +532,20 @@
       <form id="workout-form">
         <div class="modal-body">
 
+          <!-- User Selection Field -->
+          <div class="form-group">
+            <label class="form-label" for="modal-user-select"><i class="fas fa-user-check" style="color:var(--weight-color)"></i> 운동 수행자 선택</label>
+            <div style="display:flex; gap:8px;">
+              <select id="modal-user-select" class="form-control" style="flex:1;">
+                <!-- Dynamically populated -->
+              </select>
+              <input type="text" id="modal-new-user-input" class="form-control" style="flex:1; display:none;" placeholder="새 사용자 이름 입력">
+              <button type="button" class="secondary-btn btn-sm" id="toggle-new-user-btn" style="white-space:nowrap;">
+                <i class="fas fa-user-plus"></i> 새 사용자 추가
+              </button>
+            </div>
+          </div>
+
           <!-- Category Selection -->
           <div class="form-group">
             <label class="form-label">운동 종류 선택</label>
