@@ -1,5 +1,5 @@
 /**
- * Workout Tracker - Core Application Logic (With Health Metrics & AI Recommendations & Nutrition)
+ * Workout Tracker - Core Application Logic (With Health Metrics, AI Recommendations, Nutrition & Google Sheets Auto-Sync)
  */
 
 // Initial Seed Data for Demonstration
@@ -110,6 +110,10 @@ class WorkoutApp {
     };
     this.userProfile = profile;
 
+    // Google Sheets Auto-Sync Settings
+    this.sheetsWebAppUrl = localStorage.getItem('workout_sheets_url') || '';
+    this.sheetsAutoSync = localStorage.getItem('workout_sheets_autosync') === 'true';
+
     this.selectedDate = this.getFormattedDate(new Date());
     this.currentCalendarDate = new Date();
     this.editingWorkoutId = null;
@@ -137,6 +141,8 @@ class WorkoutApp {
   saveData() {
     localStorage.setItem('workout_tracker_data', JSON.stringify(this.workouts));
     localStorage.setItem('workout_user_profile', JSON.stringify(this.userProfile));
+    localStorage.setItem('workout_sheets_url', this.sheetsWebAppUrl);
+    localStorage.setItem('workout_sheets_autosync', this.sheetsAutoSync);
   }
 
   getFormattedDate(dateObj) {
@@ -168,7 +174,6 @@ class WorkoutApp {
   }
 
   calculateBMR() {
-    // Mifflin-St Jeor Equation
     const w = this.userProfile.weight;
     const h = this.userProfile.height;
     const a = this.userProfile.age || 28;
@@ -188,13 +193,11 @@ class WorkoutApp {
     const bmr = this.calculateBMR();
     const tdee = this.calculateTDEE();
 
-    // Nav pill summary
     const navText = document.getElementById('nav-profile-summary-text');
     if (navText) {
       navText.textContent = `키: ${this.userProfile.height}cm | 체중: ${this.userProfile.weight}kg (BMI: ${bmi} ${cat.text})`;
     }
 
-    // Modal Results
     if (document.getElementById('res-bmi-val')) {
       document.getElementById('res-bmi-val').textContent = bmi;
       
@@ -207,7 +210,6 @@ class WorkoutApp {
       document.getElementById('res-tdee-val').textContent = `${tdee.toLocaleString()} kcal`;
       document.getElementById('res-advice-text').textContent = cat.advice;
 
-      // Pin gauge position calculation (scale 15 to 32)
       const clampedBmi = Math.min(Math.max(bmi, 15), 32);
       const percentage = ((clampedBmi - 15) / (32 - 15)) * 100;
       document.getElementById('bmi-pin-indicator').style.left = `${percentage}%`;
@@ -247,12 +249,56 @@ class WorkoutApp {
     return Math.round(totalKcal);
   }
 
+  // --- Google Sheets Sync Engine ---
+  sendToGoogleSheets(workoutItem) {
+    if (!this.sheetsWebAppUrl || !this.sheetsAutoSync) return;
+
+    const payload = {
+      ...workoutItem,
+      calories: this.calculateWorkoutCalories(workoutItem)
+    };
+
+    fetch(this.sheetsWebAppUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(() => {
+      console.log('Successfully posted workout to Google Sheets');
+    }).catch(err => {
+      console.error('Google Sheets sync error:', err);
+    });
+  }
+
+  syncAllToGoogleSheets() {
+    if (!this.sheetsWebAppUrl) {
+      alert("먼저 구글 Apps Script 웹 앱 URL을 입력해 주세요.");
+      return;
+    }
+
+    let count = 0;
+    this.workouts.forEach(item => {
+      const payload = {
+        ...item,
+        calories: this.calculateWorkoutCalories(item)
+      };
+      fetch(this.sheetsWebAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      count++;
+    });
+
+    this.showToast(`전체 ${count}개 운동 데이터 구글 시트로 동기화 완료!`);
+  }
+
   // --- AI Smart Workout Recommendation Engine ---
   renderAIRecommendations() {
     const container = document.getElementById('ai-rec-cards-container');
     if (!container) return;
 
-    // Analyze Recent Workouts (Last 7 days)
     const recentWorkouts = this.workouts.slice(0, 15);
     const categoryCounts = { weight: 0, cardio: 0, bodyweight: 0 };
     let highestWeightPR = { name: '바벨 스쿼트', weight: 100 };
@@ -270,7 +316,6 @@ class WorkoutApp {
 
     const recommendations = [];
 
-    // Rule 1: Progressive Overload
     if (highestWeightPR.weight > 0) {
       const nextTargetWeight = highestWeightPR.weight + 2.5;
       recommendations.push({
@@ -283,7 +328,6 @@ class WorkoutApp {
       });
     }
 
-    // Rule 2: Category Balance check
     if (categoryCounts.cardio === 0 || categoryCounts.cardio < categoryCounts.weight / 3) {
       recommendations.push({
         tag: '🏃 심폐지구력 & 지방 연소',
@@ -295,7 +339,6 @@ class WorkoutApp {
       });
     }
 
-    // Rule 3: Bodyweight Core & Recovery
     recommendations.push({
       tag: '🧘 코어 & 전신 안정성',
       title: '플랭크 & 맨몸 딥스 수퍼세트',
@@ -325,24 +368,24 @@ class WorkoutApp {
     const tdee = this.calculateTDEE();
     const goal = this.selectedNutritionGoal;
 
-    let proteinMultiplier = 1.8; // default hypertrophy
-    let calorieMultiplier = 1.1; // bulking +10%
+    let proteinMultiplier = 1.8;
+    let calorieMultiplier = 1.1;
 
     if (goal === 'fatloss') {
       proteinMultiplier = 2.2;
-      calorieMultiplier = 0.85; // -15% deficit
+      calorieMultiplier = 0.85;
     } else if (goal === 'maintain') {
       proteinMultiplier = 1.6;
       calorieMultiplier = 1.0;
     }
 
     const targetCalories = Math.round(tdee * calorieMultiplier);
-    const targetProtein = Math.round(weight * proteinMultiplier); // g
-    const targetFats = Math.round((targetCalories * 0.25) / 9); // 25% of calories
+    const targetProtein = Math.round(weight * proteinMultiplier);
+    const targetFats = Math.round((targetCalories * 0.25) / 9);
     const targetCarbs = Math.round((targetCalories - (targetProtein * 4 + targetFats * 9)) / 4);
 
-    const chickenBreastCount = (targetProtein / 30).toFixed(1); // ~30g protein per 100g chicken breast
-    const eggCount = Math.round(targetProtein / 6); // ~6g per egg
+    const chickenBreastCount = (targetProtein / 30).toFixed(1);
+    const eggCount = Math.round(targetProtein / 6);
 
     document.getElementById('macro-protein-val').textContent = `${targetProtein} g`;
     document.getElementById('macro-protein-food').textContent = `닭가슴살 약 ${chickenBreastCount}덩이 (100g 기준) / 계란 ${eggCount}개 분량`;
@@ -352,6 +395,38 @@ class WorkoutApp {
   }
 
   bindEvents() {
+    // Open Google Sheets Modal
+    document.getElementById('open-sheets-modal-btn').addEventListener('click', () => {
+      document.getElementById('sheets-web-app-url').value = this.sheetsWebAppUrl;
+      document.getElementById('sheets-auto-sync-checkbox').checked = this.sheetsAutoSync;
+      document.getElementById('sheets-modal').classList.add('active');
+    });
+
+    document.querySelectorAll('.close-sheets-modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('sheets-modal').classList.remove('active');
+      });
+    });
+
+    document.getElementById('save-sheets-config-btn').addEventListener('click', () => {
+      this.sheetsWebAppUrl = document.getElementById('sheets-web-app-url').value.trim();
+      this.sheetsAutoSync = document.getElementById('sheets-auto-sync-checkbox').checked;
+      this.saveData();
+      document.getElementById('sheets-modal').classList.remove('active');
+      this.showToast("구글 스프레드시트 연동 설정이 저장되었습니다.");
+    });
+
+    document.getElementById('copy-script-code-btn').addEventListener('click', () => {
+      const codeText = document.getElementById('apps-script-code-text').textContent;
+      navigator.clipboard.writeText(codeText).then(() => {
+        this.showToast("Google Apps Script 코드가 복사되었습니다!");
+      });
+    });
+
+    document.getElementById('sync-all-to-sheets-btn').addEventListener('click', () => {
+      this.syncAllToGoogleSheets();
+    });
+
     // Open Profile Modal
     document.getElementById('open-profile-modal-btn').addEventListener('click', () => {
       document.getElementById('profile-height-input').value = this.userProfile.height;
@@ -370,7 +445,6 @@ class WorkoutApp {
       });
     });
 
-    // Realtime update inside Profile Modal when inputs change
     ['profile-height-input', 'profile-weight-input', 'profile-gender-select', 'profile-age-input'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => {
         this.userProfile.height = parseFloat(document.getElementById('profile-height-input').value) || 175;
@@ -393,7 +467,6 @@ class WorkoutApp {
       this.showToast("신체 정보 및 건강지표가 저장되었습니다.");
     });
 
-    // Nutrition Goal Selection Pills
     document.querySelectorAll('.goal-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         document.querySelectorAll('.goal-pill').forEach(p => p.classList.remove('selected'));
@@ -403,7 +476,6 @@ class WorkoutApp {
       });
     });
 
-    // Navigation Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const tabTarget = btn.dataset.tab;
@@ -425,7 +497,6 @@ class WorkoutApp {
       });
     });
 
-    // Date Picker Input
     const dateInput = document.getElementById('selected-date-picker');
     dateInput.value = this.selectedDate;
     dateInput.addEventListener('change', (e) => {
@@ -434,7 +505,6 @@ class WorkoutApp {
       this.renderDailyWorkouts();
     });
 
-    // Date Navigation Buttons (Prev / Next / Today)
     document.getElementById('prev-date-btn').addEventListener('click', () => {
       const current = new Date(this.selectedDate);
       current.setDate(current.getDate() - 1);
@@ -460,7 +530,6 @@ class WorkoutApp {
       this.renderDailyWorkouts();
     });
 
-    // Theme Toggle
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
       document.body.classList.toggle('light-theme');
       const isLight = document.body.classList.contains('light-theme');
@@ -470,12 +539,10 @@ class WorkoutApp {
       }
     });
 
-    // Add Workout Modal Trigger
     document.getElementById('open-add-modal-btn').addEventListener('click', () => {
       this.openWorkoutModal();
     });
 
-    // Category Selector in Modal
     document.querySelectorAll('.cat-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('selected'));
@@ -485,25 +552,21 @@ class WorkoutApp {
       });
     });
 
-    // Dynamic Set Row Add
     document.getElementById('add-set-row-btn').addEventListener('click', () => {
       this.addSetRowInput();
     });
 
-    // Modal Close
     document.querySelectorAll('.close-modal-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         this.closeModal();
       });
     });
 
-    // Form Submit
     document.getElementById('workout-form').addEventListener('submit', (e) => {
       e.preventDefault();
       this.saveWorkoutEntry();
     });
 
-    // Export & Import Data
     document.getElementById('export-data-btn').addEventListener('click', () => {
       const exportObj = {
         userProfile: this.userProfile,
@@ -548,7 +611,6 @@ class WorkoutApp {
       reader.readAsText(file);
     });
 
-    // Calendar Month Navigation
     document.getElementById('cal-prev-month').addEventListener('click', () => {
       this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
       this.renderCalendar();
@@ -669,7 +731,6 @@ class WorkoutApp {
     document.getElementById('dash-calories-val').textContent = totalCalories.toLocaleString();
     document.getElementById('dash-count-val').textContent = dailyItems.length;
 
-    // Calculate Workout Streak
     const workoutDates = [...new Set(this.workouts.map(w => w.date))].sort().reverse();
     let streak = 0;
     let checkDate = new Date();
@@ -818,6 +879,8 @@ class WorkoutApp {
       return;
     }
 
+    let savedEntry = null;
+
     if (this.editingWorkoutId) {
       const targetIndex = this.workouts.findIndex(w => w.id === this.editingWorkoutId);
       if (targetIndex !== -1) {
@@ -828,6 +891,7 @@ class WorkoutApp {
           sets,
           memo
         };
+        savedEntry = this.workouts[targetIndex];
       }
       this.showToast("운동 기록이 수정되었습니다.");
     } else {
@@ -840,7 +904,12 @@ class WorkoutApp {
         memo
       };
       this.workouts.unshift(newEntry);
+      savedEntry = newEntry;
       this.showToast("새 운동 기록이 추가되었습니다!");
+    }
+
+    if (savedEntry) {
+      this.sendToGoogleSheets(savedEntry);
     }
 
     this.saveData();
