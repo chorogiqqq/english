@@ -1,0 +1,20 @@
+# Android build outputs & IDE
+.gradle/
+build/
+app/build/
+*.iml
+.idea/
+.DS_Store
+Thumbs.db
+
+# Legacy files exclude
+/구현.html
+/당직근무.html
+/디자인.html
+/만성 무릎 염증 치료법 - Google Docs.pdf
+/불법주차신고.html
+/뼈대.html
+/새 폴더/
+/안티그래피티/
+/정은호_주민생활 불편 신고서.pdf
+/출장여비.html
