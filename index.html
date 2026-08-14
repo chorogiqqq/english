@@ -1,638 +1,367 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>핏트래커 (FitTracker) - 스마트 운동기록일지 & 구글 시트 자동 연동</title>
-
-  <!-- Mobile & PWA Support -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
-  <link rel="manifest" href="manifest.json">
-
+  <meta name="apple-mobile-web-app-title" content="6000단어">
+  <meta name="theme-color" content="#0b0f19">
+  <title>6000 필수 영어단어 - 매일 20단어 암기 & 테스트</title>
+  
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- App Stylesheets -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
 
-  <!-- Top Header Navigation -->
-  <header class="navbar">
-    <a href="#" class="brand">
-      <div class="brand-icon"><i class="fas fa-dumbbell"></i></div>
-      <span class="brand-title">FitTracker Log</span>
-    </a>
+  <!-- Animated Glowing Background Blobs -->
+  <div class="bg-glow-blob-1"></div>
+  <div class="bg-glow-blob-2"></div>
 
-    <!-- User Profile & Health Indicator Pill -->
-    <button class="user-health-pill-btn" id="open-profile-modal-btn" title="신체정보 및 건강지표(BMI) 설정">
-      <i class="fas fa-heart-pulse" style="color:var(--danger-color)"></i>
-      <span id="nav-profile-summary-text">키: 175cm | 체중: 70kg (BMI: 22.9 정상)</span>
-      <i class="fas fa-sliders" style="font-size:0.8rem; margin-left:4px; opacity:0.7"></i>
-    </button>
+  <!-- Header Navbar -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">📚</div>
+        <span>6000 Vocab Master</span>
+        <span class="brand-title-badge">Day 1~300</span>
+      </a>
 
-    <div class="nav-actions">
-      <!-- Google Sheets Auto-Sync Button -->
-      <button class="icon-btn" id="open-sheets-modal-btn" title="구글 스프레드시트 자동 전송 연동 설정">
-        <i class="file-excel-icon fas fa-file-excel" style="color:#10b981"></i>
-      </button>
+      <div class="header-progress-pill">
+        <span>총 진도:</span>
+        <div class="mini-progress-bar">
+          <div id="headerProgressFill" class="mini-progress-fill"></div>
+        </div>
+        <span id="headerProgressText">0 / 6,000단어 (0%)</span>
+      </div>
 
-      <button class="icon-btn" id="theme-toggle-btn" title="다크/라이트 테마 변경">
-        <i class="fas fa-sun"></i>
-      </button>
-      <button class="icon-btn" id="export-data-btn" title="데이터 백업 내보내기">
-        <i class="fas fa-download"></i>
-      </button>
-      <label for="import-file-input" class="icon-btn" title="데이터 백업 불러오기">
-        <i class="fas fa-upload"></i>
-      </label>
-      <input type="file" id="import-file-input" accept=".json" style="display:none;">
+      <div class="header-actions">
+        <button id="searchBtn" class="btn-icon" title="단어 검색 (Dictionary)">🔍</button>
+        <button id="themeToggleBtn" class="btn btn-secondary btn-sm">☀️ 맑음</button>
+      </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="app-container">
+  <!-- Day Navigator Bar -->
+  <nav class="day-nav-bar">
+    <div class="day-nav-container">
+      <div class="day-selector-group">
+        <button id="dayPrevBtn" class="day-nav-btn" title="이전 날짜">◀</button>
+        <div id="currentDayBadge" class="current-day-badge" title="날짜 변경 클릭">
+          <span id="currentDayText" class="current-day-title">Day 1</span>
+          <span id="currentLevelTag" class="current-level-tag tag-level-1">Level 1: 일상어휘</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">▼</span>
+        </div>
+        <button id="dayNextBtn" class="day-nav-btn" title="다음 날짜">▶</button>
+      </div>
 
-    <!-- Tab Bar -->
-    <nav class="tab-navigation">
-      <button class="tab-btn active" data-tab="daily">
-        <i class="fas fa-calendar-day"></i>
-        <span>일간 일지</span>
+      <div style="font-size:0.85rem; color:var(--text-secondary);">
+        💡 매일 20단어씩 300일 완성 프로그램 (일상 · 도서 · 학술논문)
+      </div>
+    </div>
+  </nav>
+
+  <!-- Navigation Tabs Bar -->
+  <div class="app-tabs-bar">
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="study">
+        📖 오늘의 단어 (20)
+      </button>
+      <button class="tab-btn" data-tab="quiz">
+        ✍️ 일일 테스트 & 퀴즈
+      </button>
+      <button class="tab-btn" data-tab="weak">
+        📓 오답 노트 & 북마크
       </button>
       <button class="tab-btn" data-tab="stats">
-        <i class="fas fa-chart-line"></i>
-        <span>통계 & PR</span>
+        📊 학습 현황 & 300일 달력
       </button>
-      <button class="tab-btn" data-tab="calendar">
-        <i class="fas fa-calendar-alt"></i>
-        <span>월간 달력</span>
-      </button>
-      <button class="tab-btn" data-tab="library">
-        <i class="fas fa-book-open"></i>
-        <span>라이브러리</span>
-      </button>
-      <button class="tab-btn" data-tab="ai-guide">
-        <i class="fas fa-wand-magic-sparkles" style="color:#f59e0b"></i>
-        <span>AI 추천 & 영양</span>
-      </button>
-    </nav>
+    </div>
+  </div>
 
-    <!-- TAB 1: DAILY LOG -->
-    <section id="tab-daily" class="tab-content active">
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
 
-      <!-- Date Selector Bar -->
-      <div class="date-selector-bar">
-        <div class="date-display">
-          <span class="current-date-text" id="display-date-text">2026년 8월 14일 (금)</span>
-          <span class="today-badge" id="today-badge-el">TODAY</span>
+    <!-- VIEW 1: TODAY'S STUDY (FLASHCARDS) -->
+    <section id="studyView" class="view-section active">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오늘의 학습 단어</h2>
+          <div class="study-subtitle">카드를 클릭하면 한국어 뜻과 예문이 뒤집어집니다 (단축키: Space/방향키).</div>
         </div>
-        <div class="date-controls">
-          <div class="user-filter-box" style="display:flex; align-items:center; gap:6px; margin-right:4px;">
-            <i class="fas fa-user-tag" style="color:var(--weight-color); font-size:0.9rem;"></i>
-            <select id="user-filter-select" class="form-control" style="padding:4px 10px; font-size:0.85rem; width:auto; height:36px; font-weight:600; cursor:pointer;" title="특정 사용자의 운동 일지만 선택 필터링">
-              <option value="all">🌐 전체 사용자 보기</option>
-            </select>
-          </div>
-          <button class="icon-btn" id="prev-date-btn" title="이전 날짜"><i class="fas fa-chevron-left"></i></button>
-          <button class="secondary-btn btn-sm" id="today-date-btn">오늘</button>
-          <button class="icon-btn" id="next-date-btn" title="다음 날짜"><i class="fas fa-chevron-right"></i></button>
-          <input type="date" id="selected-date-picker" class="date-picker-input">
+
+        <div class="study-controls-bar">
+          <button id="autoPlayBtn" class="btn btn-secondary btn-sm">▶ 자동 슬라이드</button>
+          <button id="viewToggleBtn" class="btn btn-outline btn-sm">📋 전체 목록 보기</button>
         </div>
       </div>
 
-      <!-- Quick Summary Cards -->
-      <div class="stats-summary-grid">
-        <div class="stat-card">
-          <div class="stat-icon volume"><i class="fas fa-weight-hanging"></i></div>
-          <div class="stat-info">
-            <div class="stat-label">당일 총 볼륨 (Volume)</div>
-            <div class="stat-value"><span id="dash-volume-val">0</span><span class="stat-unit">kg</span></div>
+      <!-- 3D Flashcard Wrapper -->
+      <div id="flashcardWrapper" class="flashcard-wrapper">
+        <div id="flashcard" class="flashcard">
+          <!-- Card Front -->
+          <div class="card-face card-face-front">
+            <div class="card-top-bar">
+              <span id="cardIndexTag" class="word-index-tag">1 / 20</span>
+              <button id="cardBookmarkBtn" class="card-bookmark-btn" title="북마크">☆</button>
+            </div>
+
+            <div class="card-center-body">
+              <div id="cardWord" class="card-word">ability</div>
+              <div class="card-phonetic-row">
+                <span id="cardPhonetic" class="card-phonetic">/əˈbɪləti/</span>
+                <button id="audioBtnFront" class="audio-btn" title="발음 듣기">🔊</button>
+              </div>
+              <span id="cardPos" class="card-pos">명사</span>
+            </div>
+
+            <div class="card-flip-hint">
+              🔄 카드를 클릭하여 뜻과 예문 확인하기
+            </div>
+          </div>
+
+          <!-- Card Back -->
+          <div class="card-face card-face-back">
+            <div class="card-top-bar">
+              <span class="card-pos">한글 뜻 & 예문</span>
+              <button id="audioBtnBack" class="audio-btn" title="예문 발음 듣기">🔊 예문 듣기</button>
+            </div>
+
+            <div class="card-center-body">
+              <div id="cardMeaning" class="card-meaning">능력, 기량</div>
+              <div class="card-example-box">
+                <div id="cardExampleEn" class="example-en">She has the ability to solve complex problems.</div>
+                <div id="cardExampleKo" class="example-ko">그녀는 복잡한 문제를 해결하는 능력이 있다.</div>
+              </div>
+            </div>
+
+            <div class="card-flip-hint">
+              🔄 클릭 시 다시 앞면으로 뒤집어집니다
+            </div>
           </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon calories"><i class="fas fa-fire"></i></div>
-          <div class="stat-info">
-            <div class="stat-label">추정 소모 칼로리</div>
-            <div class="stat-value"><span id="dash-calories-val">0</span><span class="stat-unit">kcal</span></div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon count"><i class="fas fa-list-check"></i></div>
-          <div class="stat-info">
-            <div class="stat-label">수행 운동 종목</div>
-            <div class="stat-value"><span id="dash-count-val">0</span><span class="stat-unit">개</span></div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon streak"><i class="fas fa-bolt"></i></div>
-          <div class="stat-info">
-            <div class="stat-label">연속 운동 달성</div>
-            <div class="stat-value"><span id="dash-streak-val">0</span><span class="stat-unit">일 연속</span></div>
-          </div>
+        <!-- Flashcard Nav Actions -->
+        <div class="card-bottom-actions" style="margin-top:1.5rem;">
+          <button id="studyPrevBtn" class="btn btn-secondary">◀ 이전 단어</button>
+          <button id="statusToggleBtn" class="status-toggle-btn">
+            <span>○</span> 복습 필요
+          </button>
+          <button id="studyNextBtn" class="btn btn-primary">다음 단어 ▶</button>
         </div>
       </div>
 
-      <!-- Workout List Header -->
-      <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-clipboard-list" style="color:var(--weight-color)"></i> 오늘의 운동 리스트</h2>
-        <button class="primary-btn" id="open-add-modal-btn">
-          <i class="fas fa-plus"></i> 운동 기록 추가
+      <!-- Alternative List View Container -->
+      <div id="listViewContainer" style="display:none;"></div>
+    </section>
+
+    <!-- VIEW 2: DAILY QUIZ & TESTS -->
+    <section id="quizView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오늘의 단어 테스트 & 퀴즈</h2>
+          <div class="study-subtitle">다양한 퀴즈 모드로 오늘 배운 20단어를 완전하게 암기했는지 확인해보세요!</div>
+        </div>
+      </div>
+
+      <!-- Quiz Mode Selection Cards -->
+      <div id="quizMenuBox" class="quiz-mode-selector">
+        <div id="btnMode4Choice" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-4choice">🎯</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">4지 선다형 퀴즈</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">영단어를 보고 알맞은 4개의 한국어 뜻 중 정답을 선택합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">퀴즈 시작 ▶</button>
+        </div>
+
+        <div id="btnModeSpelling" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-spelling">⌨️</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">스펠링 / 받아쓰기 테스트</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">한국어 뜻과 음성을 듣고 정확한 알파벳 스펠링을 직접 입력합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">테스트 시작 ▶</button>
+        </div>
+
+        <div id="btnModeMatching" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-matching">🧩</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">카드 짝맞추기 게임</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">영어 단어 카드와 한국어 뜻 카드를 클릭하여 짝을 맞춰 제거합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">게임 시작 ▶</button>
+        </div>
+      </div>
+
+      <!-- Active Quiz Component Box -->
+      <div id="quizActiveContainer" style="display:none;"></div>
+      <div id="quizResultBox" style="display:none;"></div>
+    </section>
+
+    <!-- VIEW 3: WEAK WORDS & BOOKMARKS -->
+    <section id="weakView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오답 노트 & 북마크 단어장</h2>
+          <div class="study-subtitle">퀴즈에서 틀린 단어와 내가 별표(★)로 표시해둔 약점 단어를 모아 복습합니다.</div>
+        </div>
+
+        <button id="btnStartWeakQuiz" class="btn btn-danger">
+          🔥 오답 노트 전용 복습 퀴즈
         </button>
       </div>
 
-      <!-- Workout Entry Cards List -->
-      <div class="workout-list" id="workout-list-container">
-        <!-- Rendered Dynamically -->
-      </div>
-
-    </section>
-
-    <!-- TAB 2: STATISTICS & PR -->
-    <section id="tab-stats" class="tab-content">
-      
-      <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-chart-pie" style="color:var(--cardio-color)"></i> 운동 성과 분석 & 통계</h2>
-      </div>
-
-      <div class="charts-grid">
-        <!-- Volume Trend Line Chart -->
-        <div class="chart-card">
-          <div class="chart-title">
-            <span><i class="fas fa-chart-area" style="color:var(--weight-color)"></i> 최근 7일 총 볼륨 추이 (kg)</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="volumeChartCanvas"></canvas>
-          </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+        <!-- Wrong Words Section -->
+        <div class="matrix-container">
+          <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+            ❌ 오답 노트 (틀린 단어)
+          </h3>
+          <div id="weakListContainer"></div>
         </div>
 
-        <!-- Category Ratio Pie Chart -->
-        <div class="chart-card">
-          <div class="chart-title">
-            <span><i class="fas fa-chart-pie" style="color:var(--bodyweight-color)"></i> 운동 종류별 분포</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="categoryChartCanvas"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- PR Records -->
-      <div class="pr-table-card">
-        <div class="chart-title">
-          <span><i class="fas fa-trophy" style="color:var(--accent-color)"></i> 종목별 최고 중량 기록 (Personal Record)</span>
-        </div>
-        <div class="pr-grid" id="pr-grid-container">
-          <!-- Rendered Dynamically -->
-        </div>
-      </div>
-
-    </section>
-
-    <!-- TAB 3: CALENDAR VIEW -->
-    <section id="tab-calendar" class="tab-content">
-      <div class="calendar-card">
-        <div class="calendar-header">
-          <button class="icon-btn" id="cal-prev-month"><i class="fas fa-chevron-left"></i></button>
-          <h2 class="calendar-title" id="cal-month-title">2026년 8월</h2>
-          <button class="icon-btn" id="cal-next-month"><i class="fas fa-chevron-right"></i></button>
-        </div>
-
-        <div class="calendar-grid">
-          <div class="calendar-day-header" style="color:#ef4444">일</div>
-          <div class="calendar-day-header">월</div>
-          <div class="calendar-day-header">화</div>
-          <div class="calendar-day-header">수</div>
-          <div class="calendar-day-header">목</div>
-          <div class="calendar-day-header">금</div>
-          <div class="calendar-day-header" style="color:#3b82f6">토</div>
-        </div>
-
-        <div class="calendar-grid" id="calendar-grid-days">
-          <!-- Calendar Days Rendered Dynamically -->
+        <!-- Bookmarks Section -->
+        <div class="matrix-container">
+          <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+            ★ 북마크 단어장
+          </h3>
+          <div id="bookmarkListContainer"></div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 4: EXERCISE LIBRARY -->
-    <section id="tab-library" class="tab-content">
-      <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-dumbbell" style="color:var(--weight-color)"></i> 추천 운동 종목 라이브러리</h2>
-      </div>
-      <p style="color:var(--text-muted); margin-bottom: 20px;">원하는 종목의 '선택' 버튼을 누르면 오늘 일지에 즉시 기록을 시작할 수 있습니다.</p>
-      <div class="library-grid" id="library-grid-container">
-        <!-- Rendered Dynamically -->
-      </div>
-    </section>
-
-    <!-- TAB 5: AI RECOMMENDATIONS & NUTRITION / TRENDS -->
-    <section id="tab-ai-guide" class="tab-content">
-      
-      <!-- AI Personalized Workout Recommendation Card -->
-      <div class="ai-recommendation-hero-card">
-        <div class="ai-hero-header">
-          <div class="ai-badge"><i class="fas fa-robot"></i> AI 기록 분석 결과</div>
-          <h2 class="ai-title">오늘을 위한 스마트 맞춤 운동 루틴 추천</h2>
-        </div>
-        <div class="ai-rec-grid" id="ai-rec-cards-container">
-          <!-- Dynamically generated AI recommendations -->
+    <!-- VIEW 4: STATS & 300-DAY MATRIX -->
+    <section id="statsView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>학습 성과 & 300일 달력</h2>
+          <div class="study-subtitle">나의 단어 암기 진도와 연속 학습 성과를 확인해보세요.</div>
         </div>
       </div>
 
-      <!-- Nutrition & Protein Calculator Card -->
-      <div class="nutrition-card">
-        <div class="section-header">
-          <h2 class="section-title"><i class="fas fa-apple-whole" style="color:#10b981"></i> 1:1 맞춤 영양 & 단백질 가이드</h2>
-          <div class="goal-selector-pills">
-            <button class="goal-pill selected" data-goal="hypertrophy">근육 증량 (Bulking)</button>
-            <button class="goal-pill" data-goal="fatloss">체지방 감량 (Cutting)</button>
-            <button class="goal-pill" data-goal="maintain">체중 유지 (Maintain)</button>
+      <!-- Stats Metric Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(99,102,241,0.15); color:var(--primary-500);">🏆</div>
+          <div>
+            <div id="statMasteredVal" class="stat-val">0</div>
+            <div class="stat-label">암기 완료 단어 수</div>
+            <div id="statMasteredPct" style="font-size:0.75rem; color:var(--success-500); font-weight:600;">0% 달성</div>
           </div>
         </div>
 
-        <div class="macro-result-grid">
-          <div class="macro-box protein">
-            <div class="macro-icon"><i class="fas fa-drumstick-bite"></i></div>
-            <div class="macro-info">
-              <div class="macro-label">목표 단백질 (Protein)</div>
-              <div class="macro-val" id="macro-protein-val">140 g</div>
-              <div class="macro-sub" id="macro-protein-food">닭가슴살 약 4.5덩이 / 계란 23개 분량</div>
-            </div>
-          </div>
-
-          <div class="macro-box carbs">
-            <div class="macro-icon"><i class="fas fa-bowl-rice"></i></div>
-            <div class="macro-info">
-              <div class="macro-label">목표 탄수화물 (Carbs)</div>
-              <div class="macro-val" id="macro-carbs-val">280 g</div>
-              <div class="macro-sub">현미밥 약 3공기 / 고구마 4개</div>
-            </div>
-          </div>
-
-          <div class="macro-box fats">
-            <div class="macro-icon"><i class="fas fa-avocado"></i></div>
-            <div class="macro-info">
-              <div class="macro-label">목표 지방 (Fats)</div>
-              <div class="macro-val" id="macro-fats-val">55 g</div>
-              <div class="macro-sub">견과류 한 줌 / 올리브유 2스푼</div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:var(--warning-500);">⚡</div>
+          <div>
+            <div id="statStreakVal" class="stat-val">1일</div>
+            <div class="stat-label">연속 학습일 수 (Streak)</div>
           </div>
         </div>
 
-        <!-- Nutrient Timing Timeline -->
-        <div class="timing-timeline">
-          <h4 style="font-size:1rem; font-weight:700; margin-bottom:12px;"><i class="fas fa-clock" style="color:var(--accent-color)"></i> 운동 전/후 타이밍 영양 섭취 가이드</h4>
-          <div class="timing-grid">
-            <div class="timing-item">
-              <span class="timing-badge pre">운동 1~2시간 전</span>
-              <h5>에너지 충전 (Pre-Workout)</h5>
-              <p>소화가 잘되는 복합 탄수화물(바나나, 오트밀)과 아메리카노로 운동 수행 능력 극대화</p>
-            </div>
-            <div class="timing-item">
-              <span class="timing-badge post">운동 직후 45분 내</span>
-              <h5>기회 창 영양 보충 (Post-Workout)</h5>
-              <p>빠른 단백질(보충제/달걀)과 단당류(포도즙/사과)를 함께 섭취하여 근손실 방지 및 합성 자극</p>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:var(--success-500);">📅</div>
+          <div>
+            <div id="statDaysVal" class="stat-val">0 / 300일</div>
+            <div class="stat-label">학습 완료 일수</div>
           </div>
         </div>
 
-      </div>
-
-      <!-- Latest Fitness Trends 2026 -->
-      <div class="trends-section">
-        <div class="section-header">
-          <h2 class="section-title"><i class="fas fa-fire-flame-curved" style="color:#ef4444"></i> 2026 최신 피트니스 트렌드</h2>
-        </div>
-
-        <div class="trends-grid">
-          <div class="trend-card">
-            <div class="trend-badge">TREND 01</div>
-            <h4>🏋️‍♂️ 하이브리드 피트니스 & HYROX</h4>
-            <p>웨이트 트레이닝의 근력과 유산소의 심폐 지구력을 결합한 신개념 전신 고강도 서킷 트레이닝입니다.</p>
-          </div>
-
-          <div class="trend-card">
-            <div class="trend-badge">TREND 02</div>
-            <h4>🏃 Zone 2 중저강도 유산소</h4>
-            <p>대화가 가능한 정도의 중저강도 페이스로 30분 이상 지속하여 미토콘드리아 활성화 및 체지방 연소를 최적화합니다.</p>
-          </div>
-
-          <div class="trend-card">
-            <div class="trend-badge">TREND 03</div>
-            <h4>📈 점진적 과부하 스마트 루틴</h4>
-            <p>매주 세트수나 중량을 2.5~5%씩 단계적으로 늘려 부상 없이 지속 가능한 근성장을 이루는 과학적 분석법입니다.</p>
-          </div>
-
-          <div class="trend-card">
-            <div class="trend-badge">TREND 04</div>
-            <h4>🧘 모빌리티 & 디로딩 (Deload)</h4>
-            <p>4~6주 고강도 훈련 후 1주일간 중량을 50% 낮춰 관절과 신경계를 회복시키는 스마트 휴식 전략입니다.</p>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(6,182,212,0.15); color:var(--level1-color);">🎯</div>
+          <div>
+            <div id="statAccuracyVal" class="stat-val">0%</div>
+            <div class="stat-label">테스트 평균 정답률</div>
           </div>
         </div>
       </div>
 
+      <!-- 300-Day Grid Matrix -->
+      <div class="matrix-container">
+        <div class="matrix-header">
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700;">300일 학습 현황 매트릭스</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">원하는 날짜 숫자를 클릭하여 해당 학습으로 이동하세요.</p>
+          </div>
+          <div style="display:flex; gap:1rem; font-size:0.8rem;">
+            <span style="display:flex; align-items:center; gap:0.3rem;"><span style="width:12px; height:12px; background:rgba(16,185,129,0.3); border:1px solid var(--success-500); border-radius:2px;"></span> 완료</span>
+            <span style="display:flex; align-items:center; gap:0.3rem;"><span style="width:12px; height:12px; background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:2px;"></span> 미학습</span>
+          </div>
+        </div>
+
+        <div id="matrixGrid" class="matrix-grid"></div>
+      </div>
+
+      <!-- Data Backup / Reset Actions -->
+      <div class="matrix-container" style="margin-top:1.5rem;">
+        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">데이터 관리 & 백업</h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">학습 데이터를 백업하거나 다른 기기로 이전할 수 있습니다.</p>
+
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <button id="btnExportData" class="btn btn-secondary btn-sm">💾 데이터 백업 저장 (JSON)</button>
+          <button id="btnImportData" class="btn btn-secondary btn-sm">📂 데이터 복원 불러오기</button>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+          <button id="btnResetData" class="btn btn-outline btn-sm" style="color:var(--danger-500); border-color:rgba(239,68,68,0.3); margin-left:auto;">
+            ⚠️ 초기화
+          </button>
+        </div>
+      </div>
     </section>
 
   </main>
 
-  <!-- GOOGLE SHEETS AUTO-SYNC MODAL -->
-  <div class="modal-overlay" id="sheets-modal">
-    <div class="modal-container">
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div>6000 Essential English Words - Daily 20 Words Vocabulary & Testing System</div>
+    <div style="margin-top:0.3rem; color:var(--text-muted); font-size:0.75rem;">Level 1: Daily Essential (1~2000) | Level 2: Books & Media (2001~4000) | Level 3: Academic Papers (4001~6000)</div>
+  </footer>
+
+  <!-- MODAL 1: Day Select Grid Modal -->
+  <div id="dayModalOverlay" class="modal-overlay">
+    <div class="modal-box">
       <div class="modal-header">
-        <h3 class="modal-title"><i class="fas fa-file-excel" style="color:#10b981"></i> 구글 스프레드시트 자동 연동</h3>
-        <button class="action-icon-btn close-sheets-modal-btn"><i class="fas fa-times"></i></button>
+        <h3 style="font-size:1.2rem; font-weight:700;">학습 날짜 선택 (Day 1 ~ Day 300)</h3>
+        <button id="closeDayModalBtn" class="btn-icon" style="width:32px; height:32px;">✕</button>
       </div>
       <div class="modal-body">
-        
-        <div class="form-group">
-          <label class="form-label" for="sheets-web-app-url">Google Apps Script 웹 앱 URL</label>
-          <input type="url" id="sheets-web-app-url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">
-            URL을 입력하고 활성화하면 운동 기록 저장 시 구글 스프레드시트 표로 자동 전송됩니다!
-          </div>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
-          <input type="checkbox" id="sheets-auto-sync-checkbox" style="width:18px; height:18px; cursor:pointer;">
-          <label for="sheets-auto-sync-checkbox" style="font-weight:600; font-size:0.95rem; cursor:pointer;">운동 입력 시 구글 시트로 자동 실시간 전송</label>
-        </div>
-
-        <!-- 1-Minute Setup Guide -->
-        <div class="sheets-guide-box">
-          <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:8px; color:#10b981;">
-            <i class="fas fa-lightbulb"></i> 1분 구글 시트 연동 설치 방법
-          </h4>
-          <ol style="font-size:0.82rem; color:var(--text-muted); padding-left:20px; line-height:1.6;">
-            <li>구글 드라이브에서 <strong>새 구글 스프레드시트</strong>를 만듭니다.</li>
-            <li>상단 메뉴 <strong>확장 프로그램 ➔ Apps Script</strong>를 클릭합니다.</li>
-            <li>아래 스크립트 코드를 복사하여 붙여넣고 저장합니다.</li>
-            <li>우측 상단 <strong>배포 ➔ 새 배포 ➔ 유형: 웹 앱</strong> 선택 후, <strong>액세스 권한: 모든 사용자(Anyone)</strong>로 설정하여 배포합니다.</li>
-            <li>생성된 <strong>웹 앱 URL</strong>을 위 입력란에 붙여넣으면 끝!</li>
-          </ol>
-
-          <!-- Apps Script Code Box -->
-          <div class="script-code-box">
-            <button class="btn-sm secondary-btn" id="copy-script-code-btn" style="position:absolute; right:8px; top:8px; padding:4px 8px; font-size:0.75rem;">
-              <i class="fas fa-copy"></i> 복사
-            </button>
-            <pre id="apps-script-code-text">function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["날짜", "사용자이름", "카테고리", "운동종목", "세트수", "세트상세", "추정소모칼로리(kcal)", "메모"]);
-  }
-  
-  var setsDetail = data.sets.map(function(s, idx) {
-    return (idx + 1) + "세트: " + (s.weight ? s.weight + "kg x " + s.reps + "회" : s.duration + "분 " + s.distance + "km");
-  }).join(" | ");
-  
-  sheet.appendRow([
-    data.date,
-    data.userName || "기본사용자",
-    data.category,
-    data.name,
-    data.sets.length,
-    setsDetail,
-    data.calories || 0,
-    data.memo || ""
-  ]);
-  
-  return ContentService.createTextOutput("OK");
-}
-
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var values = sheet.getDataRange().getValues();
-  if (values.length <= 1) {
-    return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
-  }
-  var list = [];
-  for (var i = 1; i < values.length; i++) {
-    var row = values[i];
-    var dateStr = row[0];
-    if (dateStr instanceof Date) {
-      dateStr = Utilities.formatDate(dateStr, Session.getScriptTimeZone(), "yyyy-MM-dd");
-    }
-    list.push({
-      date: String(dateStr),
-      userName: String(row[1] || '정은호'),
-      category: String(row[2] || 'weight'),
-      name: String(row[3] || '운동'),
-      setsCount: row[4],
-      setsDetail: String(row[5] || ''),
-      calories: row[6],
-      memo: String(row[7] || '')
-    });
-  }
-  return ContentService.createTextOutput(JSON.stringify(list)).setMimeType(ContentService.MimeType.JSON);
-}</pre>
-          </div>
-        </div>
-
-      </div>
-      <div class="modal-footer" style="flex-wrap:wrap;">
-        <button type="button" class="secondary-btn" id="fetch-all-from-sheets-btn" style="color:#10b981; border-color:rgba(16,185,129,0.4)"><i class="fas fa-cloud-arrow-down"></i> 구글 시트에서 전체 기록 가져오기</button>
-        <button type="button" class="secondary-btn" id="sync-all-to-sheets-btn"><i class="fas fa-cloud-arrow-up"></i> 내보내기 동기화</button>
-        <button type="button" class="primary-btn close-sheets-modal-btn" id="save-sheets-config-btn"><i class="fas fa-check"></i> 저장</button>
+        <div id="dayGridModal" class="matrix-grid" style="max-height:60vh;"></div>
       </div>
     </div>
   </div>
 
-  <!-- HEALTH METRICS & BODY PROFILE MODAL -->
-  <div class="modal-overlay" id="profile-modal">
-    <div class="modal-container">
+  <!-- MODAL 2: Dictionary Search Modal -->
+  <div id="searchModalOverlay" class="modal-overlay">
+    <div class="modal-box" style="max-width:750px;">
       <div class="modal-header">
-        <h3 class="modal-title"><i class="fas fa-heart-pulse" style="color:var(--danger-color)"></i> 신체 정보 & 건강 지표 (BMI)</h3>
-        <button class="action-icon-btn close-profile-modal-btn"><i class="fas fa-times"></i></button>
+        <h3 style="font-size:1.2rem; font-weight:700;">🔍 6,000 단어 사전 검색</h3>
+        <button id="closeSearchModalBtn" class="btn-icon" style="width:32px; height:32px;">✕</button>
       </div>
       <div class="modal-body">
-        
-        <!-- User Name Input -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label class="form-label" for="profile-name-input">사용자 이름 / 닉네임 (구글 시트 사용자 구분용)</label>
-          <input type="text" id="profile-name-input" class="form-control" value="정은호" placeholder="예: 정은호, 홍길동, User A 등">
+        <div class="search-input-box">
+          <span class="search-icon-inside">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="영단어 또는 한글 뜻 입력 (예: ability, 능력, absorb...)" />
         </div>
-
-        <!-- Form Inputs -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="profile-height-input">신장 (키 cm)</label>
-            <input type="number" id="profile-height-input" class="form-control" value="175" min="100" max="230" step="0.5">
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="profile-weight-input">체중 (kg)</label>
-            <input type="number" id="profile-weight-input" class="form-control" value="70" min="30" max="250" step="0.5">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="profile-gender-select">성별</label>
-            <select id="profile-gender-select" class="form-control">
-              <option value="male">남성 (Male)</option>
-              <option value="female">여성 (Female)</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" for="profile-age-input">나이 (세)</label>
-            <input type="number" id="profile-age-input" class="form-control" value="28" min="10" max="100">
-          </div>
-        </div>
-
-        <!-- Health Metrics Analysis Card -->
-        <div class="health-results-card">
-          <div class="bmi-header-row">
-            <div>
-              <div style="font-size:0.85rem; color:var(--text-muted)">나의 체질량 지수 (BMI)</div>
-              <div class="bmi-score-text"><span id="res-bmi-val">22.9</span> <span id="res-bmi-badge" class="bmi-status-tag normal">정상</span></div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:0.85rem; color:var(--text-muted)">적정 표준 체중</div>
-              <div style="font-size:1.2rem; font-weight:700; color:var(--text-main)" id="res-std-weight-val">67.4 kg</div>
-            </div>
-          </div>
-
-          <!-- BMI Visual Bar Gauge -->
-          <div class="bmi-gauge-bar">
-            <div class="bmi-gauge-segment underweight" title="저체중 (<18.5)"></div>
-            <div class="bmi-gauge-segment normal" title="정상 (18.5 ~ 22.9)"></div>
-            <div class="bmi-gauge-segment overweight" title="비만전단계 (23.0 ~ 24.9)"></div>
-            <div class="bmi-gauge-segment obese" title="비만 (≥25.0)"></div>
-            <div class="bmi-pin" id="bmi-pin-indicator" style="left: 45%;"></div>
-          </div>
-          <div class="bmi-gauge-labels">
-            <span>저체중(18.5)</span>
-            <span>정상(23.0)</span>
-            <span>과체중(25.0)</span>
-            <span>비만</span>
-          </div>
-
-          <!-- Metabolic Stats Grid -->
-          <div class="metabolic-grid">
-            <div class="meta-box">
-              <div class="meta-label">기초대사량 (BMR)</div>
-              <div class="meta-val" id="res-bmr-val">1,650 kcal</div>
-              <div class="meta-sub">생존에 필요한 최소 에너지</div>
-            </div>
-            <div class="meta-box">
-              <div class="meta-label">일일 권장 섭취량 (TDEE)</div>
-              <div class="meta-val" id="res-tdee-val">2,268 kcal</div>
-              <div class="meta-sub">현재 체중 유지 권장 칼로리</div>
-            </div>
-          </div>
-
-          <!-- Health Advice Box -->
-          <div class="health-advice-box" id="res-advice-box">
-            <i class="fas fa-user-doctor" style="color:var(--weight-color); font-size:1.2rem"></i>
-            <span id="res-advice-text">현재 건강한 정상 체중 범위를 유지하고 계십니다! 운동 루틴을 유지하며 근육량을 늘려보세요.</span>
-          </div>
-
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="primary-btn close-profile-modal-btn" id="save-profile-btn"><i class="fas fa-check"></i> 저장 및 적용</button>
+        <div id="searchResultsContainer" style="max-height:55vh; overflow-y:auto;"></div>
       </div>
     </div>
   </div>
 
-  <!-- ADD / EDIT WORKOUT MODAL -->
-  <div class="modal-overlay" id="workout-modal">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3 class="modal-title" id="modal-title-text">새 운동 추가</h3>
-        <button class="action-icon-btn close-modal-btn"><i class="fas fa-times"></i></button>
-      </div>
-      <form id="workout-form">
-        <div class="modal-body">
-
-          <!-- User Selection Field -->
-          <div class="form-group">
-            <label class="form-label" for="modal-user-select"><i class="fas fa-user-check" style="color:var(--weight-color)"></i> 운동 수행자 선택</label>
-            <div style="display:flex; gap:8px;">
-              <select id="modal-user-select" class="form-control" style="flex:1;">
-                <!-- Dynamically populated -->
-              </select>
-              <input type="text" id="modal-new-user-input" class="form-control" style="flex:1; display:none;" placeholder="새 사용자 이름 입력">
-              <button type="button" class="secondary-btn btn-sm" id="toggle-new-user-btn" style="white-space:nowrap;">
-                <i class="fas fa-user-plus"></i> 새 사용자 추가
-              </button>
-            </div>
-          </div>
-
-          <!-- Category Selection -->
-          <div class="form-group">
-            <label class="form-label">운동 종류 선택</label>
-            <div class="category-selector">
-              <button type="button" class="cat-pill selected" data-category="weight">
-                <i class="fas fa-weight-hanging"></i>
-                <span>웨이트</span>
-              </button>
-              <button type="button" class="cat-pill" data-category="bodyweight">
-                <i class="fas fa-child"></i>
-                <span>맨몸운동</span>
-              </button>
-              <button type="button" class="cat-pill" data-category="cardio">
-                <i class="fas fa-running"></i>
-                <span>유산소</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Exercise Name -->
-          <div class="form-group">
-            <label class="form-label" for="exercise-name-input">운동 종목명</label>
-            <input type="text" id="exercise-name-input" class="form-control" placeholder="예: 벤치프레스, 스쿼트, 야외 러닝 등" required>
-          </div>
-
-          <!-- Set Header & Container -->
-          <div class="form-group">
-            <label class="form-label">세트 상세 입력</label>
-            <div class="sets-input-header" id="sets-input-header-el">
-              <div>세트</div><div>중량 (kg)</div><div>횟수 (회)</div><div></div>
-            </div>
-            <div id="sets-inputs-container">
-              <!-- Set Rows Rendered Dynamically -->
-            </div>
-            <button type="button" class="add-set-btn" id="add-set-row-btn">
-              <i class="fas fa-plus"></i> 세트 추가하기
-            </button>
-          </div>
-
-          <!-- Memo Input -->
-          <div class="form-group">
-            <label class="form-label" for="exercise-memo-input">메모 (선택사항)</label>
-            <input type="text" id="exercise-memo-input" class="form-control" placeholder="자극 부위, 상태, 특이사항 기록">
-          </div>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="secondary-btn close-modal-btn">취소</button>
-          <button type="submit" class="primary-btn"><i class="fas fa-save"></i> 저장하기</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div class="toast-container" id="toast-container"></div>
-
-  <!-- Application Logic -->
-  <script src="app.js"></script>
-
+  <!-- App JavaScript Files -->
+  <script src="js/data/words-level1.js"></script>
+  <script src="js/data/words-level2.js"></script>
+  <script src="js/data/words-level3.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/study.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
