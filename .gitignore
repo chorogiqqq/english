@@ -15,6 +15,10 @@ Thumbs.db
 /불법주차신고.html
 /뼈대.html
 /새 폴더/
+# /안티그래피티/
 /안티그래피티/
+*.venv/
+.venv/
+node_modules/
 /정은호_주민생활 불편 신고서.pdf
 /출장여비.html

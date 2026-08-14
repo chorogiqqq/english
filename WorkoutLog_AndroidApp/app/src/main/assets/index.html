@@ -412,13 +412,41 @@
   ]);
   
   return ContentService.createTextOutput("OK");
+}
+
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var values = sheet.getDataRange().getValues();
+  if (values.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+  }
+  var list = [];
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var dateStr = row[0];
+    if (dateStr instanceof Date) {
+      dateStr = Utilities.formatDate(dateStr, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    }
+    list.push({
+      date: String(dateStr),
+      userName: String(row[1] || '정은호'),
+      category: String(row[2] || 'weight'),
+      name: String(row[3] || '운동'),
+      setsCount: row[4],
+      setsDetail: String(row[5] || ''),
+      calories: row[6],
+      memo: String(row[7] || '')
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify(list)).setMimeType(ContentService.MimeType.JSON);
 }</pre>
           </div>
         </div>
 
       </div>
-      <div class="modal-footer">
-        <button type="button" class="secondary-btn" id="sync-all-to-sheets-btn"><i class="fas fa-cloud-arrow-up"></i> 전체 데이터 구글 시트로 동기화</button>
+      <div class="modal-footer" style="flex-wrap:wrap;">
+        <button type="button" class="secondary-btn" id="fetch-all-from-sheets-btn" style="color:#10b981; border-color:rgba(16,185,129,0.4)"><i class="fas fa-cloud-arrow-down"></i> 구글 시트에서 전체 기록 가져오기</button>
+        <button type="button" class="secondary-btn" id="sync-all-to-sheets-btn"><i class="fas fa-cloud-arrow-up"></i> 내보내기 동기화</button>
         <button type="button" class="primary-btn close-sheets-modal-btn" id="save-sheets-config-btn"><i class="fas fa-check"></i> 저장</button>
       </div>
     </div>

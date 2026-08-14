@@ -362,6 +362,81 @@ class WorkoutApp {
     this.showToast(`전체 ${count}개 운동 데이터 구글 시트로 동기화 완료!`);
   }
 
+  async fetchFromGoogleSheets() {
+    if (!this.sheetsWebAppUrl) {
+      alert("먼저 구글 Apps Script 웹 앱 URL을 설정해 주세요.");
+      return;
+    }
+
+    this.showToast("구글 시트에서 전체 기록 불러오는 중...");
+
+    try {
+      const res = await fetch(this.sheetsWebAppUrl);
+      const rows = await res.json();
+      
+      if (!Array.isArray(rows) || rows.length === 0) {
+        this.showToast("구글 시트에 저장된 기록이 없거나 아직 doGet이 배포되지 않았습니다.");
+        return;
+      }
+
+      let newCount = 0;
+      rows.forEach((row, idx) => {
+        if (!row.date || !row.name) return;
+
+        let parsedSets = [];
+        if (row.setsDetail) {
+          const parts = String(row.setsDetail).split(' | ');
+          parts.forEach(part => {
+            const matchWeightReps = part.match(/(\d+(?:\.\d+)?)kg\s*x\s*(\d+)회/);
+            const matchCardio = part.match(/(\d+(?:\.\d+)?)분\s*(\d+(?:\.\d+)?)km/);
+            if (matchWeightReps) {
+              parsedSets.push({ weight: parseFloat(matchWeightReps[1]), reps: parseInt(matchWeightReps[2]) });
+            } else if (matchCardio) {
+              parsedSets.push({ duration: parseFloat(matchCardio[1]), distance: parseFloat(matchCardio[2]) });
+            }
+          });
+        }
+
+        if (parsedSets.length === 0) {
+          parsedSets = row.category === 'cardio' ? [{ duration: 30, distance: 5 }] : [{ weight: 60, reps: 10 }];
+        }
+
+        const existingMatch = this.workouts.find(w => 
+          w.date === row.date && 
+          w.name === row.name && 
+          (w.userName || '정은호') === row.userName
+        );
+
+        if (!existingMatch) {
+          this.workouts.push({
+            id: `w-sheets-${Date.now()}-${idx}`,
+            date: row.date,
+            userName: row.userName || '정은호',
+            category: row.category || 'weight',
+            name: row.name,
+            sets: parsedSets,
+            memo: row.memo || ''
+          });
+          newCount++;
+        }
+      });
+
+      this.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      this.saveData();
+      this.updateUserFilterDropdown();
+      this.renderDailyWorkouts();
+      this.updateDashboardSummary();
+      this.renderCalendar();
+      this.renderAIRecommendations();
+
+      this.showToast(`구글 시트에서 ${rows.length}개 기록 동기화 완료! (신규 ${newCount}개 추가)`);
+    } catch (err) {
+      console.error('Fetch from Google Sheets error:', err);
+      alert("구글 시트에서 데이터를 불러오는 중 오류가 발생했습니다. Apps Script 배포 상태(doGet)를 확인해 주세요.");
+    }
+  }
+
   // --- AI Smart Workout Recommendation Engine ---
   renderAIRecommendations() {
     const container = document.getElementById('ai-rec-cards-container');
@@ -528,6 +603,13 @@ class WorkoutApp {
     document.getElementById('sync-all-to-sheets-btn').addEventListener('click', () => {
       this.syncAllToGoogleSheets();
     });
+
+    const fetchBtn = document.getElementById('fetch-all-from-sheets-btn');
+    if (fetchBtn) {
+      fetchBtn.addEventListener('click', () => {
+        this.fetchFromGoogleSheets();
+      });
+    }
 
     // Open Profile Modal
     document.getElementById('open-profile-modal-btn').addEventListener('click', () => {
