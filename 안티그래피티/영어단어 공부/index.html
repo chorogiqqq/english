@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="6000단어">
+  <meta name="theme-color" content="#0b0f19">
+  <title>6000 필수 영어단어 - 매일 20단어 암기 & 테스트</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- App Stylesheets -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Animated Glowing Background Blobs -->
+  <div class="bg-glow-blob-1"></div>
+  <div class="bg-glow-blob-2"></div>
+
+  <!-- Header Navbar -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">📚</div>
+        <span>6000 Vocab Master</span>
+        <span class="brand-title-badge">Day 1~300</span>
+      </a>
+
+      <div class="header-progress-pill">
+        <span>총 진도:</span>
+        <div class="mini-progress-bar">
+          <div id="headerProgressFill" class="mini-progress-fill"></div>
+        </div>
+        <span id="headerProgressText">0 / 6,000단어 (0%)</span>
+      </div>
+
+      <div class="header-actions">
+        <button id="searchBtn" class="btn-icon" title="단어 검색 (Dictionary)">🔍</button>
+        <button id="themeToggleBtn" class="btn btn-secondary btn-sm">☀️ 맑음</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Day Navigator Bar -->
+  <nav class="day-nav-bar">
+    <div class="day-nav-container">
+      <div class="day-selector-group">
+        <button id="dayPrevBtn" class="day-nav-btn" title="이전 날짜">◀</button>
+        <div id="currentDayBadge" class="current-day-badge" title="날짜 변경 클릭">
+          <span id="currentDayText" class="current-day-title">Day 1</span>
+          <span id="currentLevelTag" class="current-level-tag tag-level-1">Level 1: 일상어휘</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">▼</span>
+        </div>
+        <button id="dayNextBtn" class="day-nav-btn" title="다음 날짜">▶</button>
+      </div>
+
+      <div style="font-size:0.85rem; color:var(--text-secondary);">
+        💡 매일 20단어씩 300일 완성 프로그램 (일상 · 도서 · 학술논문)
+      </div>
+    </div>
+  </nav>
+
+  <!-- Navigation Tabs Bar -->
+  <div class="app-tabs-bar">
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="study">
+        📖 오늘의 단어 (20)
+      </button>
+      <button class="tab-btn" data-tab="quiz">
+        ✍️ 일일 테스트 & 퀴즈
+      </button>
+      <button class="tab-btn" data-tab="weak">
+        📓 오답 노트 & 북마크
+      </button>
+      <button class="tab-btn" data-tab="stats">
+        📊 학습 현황 & 300일 달력
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
+
+    <!-- VIEW 1: TODAY'S STUDY (FLASHCARDS) -->
+    <section id="studyView" class="view-section active">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오늘의 학습 단어</h2>
+          <div class="study-subtitle">카드를 클릭하면 한국어 뜻과 예문이 뒤집어집니다 (단축키: Space/방향키).</div>
+        </div>
+
+        <div class="study-controls-bar">
+          <button id="autoPlayBtn" class="btn btn-secondary btn-sm">▶ 자동 슬라이드</button>
+          <button id="viewToggleBtn" class="btn btn-outline btn-sm">📋 전체 목록 보기</button>
+        </div>
+      </div>
+
+      <!-- 3D Flashcard Wrapper -->
+      <div id="flashcardWrapper" class="flashcard-wrapper">
+        <div id="flashcard" class="flashcard">
+          <!-- Card Front -->
+          <div class="card-face card-face-front">
+            <div class="card-top-bar">
+              <span id="cardIndexTag" class="word-index-tag">1 / 20</span>
+              <button id="cardBookmarkBtn" class="card-bookmark-btn" title="북마크">☆</button>
+            </div>
+
+            <div class="card-center-body">
+              <div id="cardWord" class="card-word">ability</div>
+              <div class="card-phonetic-row">
+                <span id="cardPhonetic" class="card-phonetic">/əˈbɪləti/</span>
+                <button id="audioBtnFront" class="audio-btn" title="발음 듣기">🔊</button>
+              </div>
+              <span id="cardPos" class="card-pos">명사</span>
+            </div>
+
+            <div class="card-flip-hint">
+              🔄 카드를 클릭하여 뜻과 예문 확인하기
+            </div>
+          </div>
+
+          <!-- Card Back -->
+          <div class="card-face card-face-back">
+            <div class="card-top-bar">
+              <span class="card-pos">한글 뜻 & 예문</span>
+              <button id="audioBtnBack" class="audio-btn" title="예문 발음 듣기">🔊 예문 듣기</button>
+            </div>
+
+            <div class="card-center-body">
+              <div id="cardMeaning" class="card-meaning">능력, 기량</div>
+              <div class="card-example-box">
+                <div id="cardExampleEn" class="example-en">She has the ability to solve complex problems.</div>
+                <div id="cardExampleKo" class="example-ko">그녀는 복잡한 문제를 해결하는 능력이 있다.</div>
+              </div>
+            </div>
+
+            <div class="card-flip-hint">
+              🔄 클릭 시 다시 앞면으로 뒤집어집니다
+            </div>
+          </div>
+        </div>
+
+        <!-- Flashcard Nav Actions -->
+        <div class="card-bottom-actions" style="margin-top:1.5rem;">
+          <button id="studyPrevBtn" class="btn btn-secondary">◀ 이전 단어</button>
+          <button id="statusToggleBtn" class="status-toggle-btn">
+            <span>○</span> 복습 필요
+          </button>
+          <button id="studyNextBtn" class="btn btn-primary">다음 단어 ▶</button>
+        </div>
+      </div>
+
+      <!-- Alternative List View Container -->
+      <div id="listViewContainer" style="display:none;"></div>
+    </section>
+
+    <!-- VIEW 2: DAILY QUIZ & TESTS -->
+    <section id="quizView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오늘의 단어 테스트 & 퀴즈</h2>
+          <div class="study-subtitle">다양한 퀴즈 모드로 오늘 배운 20단어를 완전하게 암기했는지 확인해보세요!</div>
+        </div>
+      </div>
+
+      <!-- Quiz Mode Selection Cards -->
+      <div id="quizMenuBox" class="quiz-mode-selector">
+        <div id="btnMode4Choice" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-4choice">🎯</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">4지 선다형 퀴즈</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">영단어를 보고 알맞은 4개의 한국어 뜻 중 정답을 선택합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">퀴즈 시작 ▶</button>
+        </div>
+
+        <div id="btnModeSpelling" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-spelling">⌨️</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">스펠링 / 받아쓰기 테스트</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">한국어 뜻과 음성을 듣고 정확한 알파벳 스펠링을 직접 입력합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">테스트 시작 ▶</button>
+        </div>
+
+        <div id="btnModeMatching" class="quiz-card-option">
+          <div class="quiz-icon-box quiz-icon-matching">🧩</div>
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.3rem;">카드 짝맞추기 게임</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">영어 단어 카드와 한국어 뜻 카드를 클릭하여 짝을 맞춰 제거합니다.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:auto;">게임 시작 ▶</button>
+        </div>
+      </div>
+
+      <!-- Active Quiz Component Box -->
+      <div id="quizActiveContainer" style="display:none;"></div>
+      <div id="quizResultBox" style="display:none;"></div>
+    </section>
+
+    <!-- VIEW 3: WEAK WORDS & BOOKMARKS -->
+    <section id="weakView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>오답 노트 & 북마크 단어장</h2>
+          <div class="study-subtitle">퀴즈에서 틀린 단어와 내가 별표(★)로 표시해둔 약점 단어를 모아 복습합니다.</div>
+        </div>
+
+        <button id="btnStartWeakQuiz" class="btn btn-danger">
+          🔥 오답 노트 전용 복습 퀴즈
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+        <!-- Wrong Words Section -->
+        <div class="matrix-container">
+          <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+            ❌ 오답 노트 (틀린 단어)
+          </h3>
+          <div id="weakListContainer"></div>
+        </div>
+
+        <!-- Bookmarks Section -->
+        <div class="matrix-container">
+          <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+            ★ 북마크 단어장
+          </h3>
+          <div id="bookmarkListContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: STATS & 300-DAY MATRIX -->
+    <section id="statsView" class="view-section">
+      <div class="study-header">
+        <div class="study-title-group">
+          <h2>학습 성과 & 300일 달력</h2>
+          <div class="study-subtitle">나의 단어 암기 진도와 연속 학습 성과를 확인해보세요.</div>
+        </div>
+      </div>
+
+      <!-- Stats Metric Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(99,102,241,0.15); color:var(--primary-500);">🏆</div>
+          <div>
+            <div id="statMasteredVal" class="stat-val">0</div>
+            <div class="stat-label">암기 완료 단어 수</div>
+            <div id="statMasteredPct" style="font-size:0.75rem; color:var(--success-500); font-weight:600;">0% 달성</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:var(--warning-500);">⚡</div>
+          <div>
+            <div id="statStreakVal" class="stat-val">1일</div>
+            <div class="stat-label">연속 학습일 수 (Streak)</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:var(--success-500);">📅</div>
+          <div>
+            <div id="statDaysVal" class="stat-val">0 / 300일</div>
+            <div class="stat-label">학습 완료 일수</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(6,182,212,0.15); color:var(--level1-color);">🎯</div>
+          <div>
+            <div id="statAccuracyVal" class="stat-val">0%</div>
+            <div class="stat-label">테스트 평균 정답률</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 300-Day Grid Matrix -->
+      <div class="matrix-container">
+        <div class="matrix-header">
+          <div>
+            <h3 style="font-size:1.2rem; font-weight:700;">300일 학습 현황 매트릭스</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">원하는 날짜 숫자를 클릭하여 해당 학습으로 이동하세요.</p>
+          </div>
+          <div style="display:flex; gap:1rem; font-size:0.8rem;">
+            <span style="display:flex; align-items:center; gap:0.3rem;"><span style="width:12px; height:12px; background:rgba(16,185,129,0.3); border:1px solid var(--success-500); border-radius:2px;"></span> 완료</span>
+            <span style="display:flex; align-items:center; gap:0.3rem;"><span style="width:12px; height:12px; background:var(--bg-tertiary); border:1px solid var(--border-color); border-radius:2px;"></span> 미학습</span>
+          </div>
+        </div>
+
+        <div id="matrixGrid" class="matrix-grid"></div>
+      </div>
+
+      <!-- Data Backup / Reset Actions -->
+      <div class="matrix-container" style="margin-top:1.5rem;">
+        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">데이터 관리 & 백업</h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">학습 데이터를 백업하거나 다른 기기로 이전할 수 있습니다.</p>
+
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <button id="btnExportData" class="btn btn-secondary btn-sm">💾 데이터 백업 저장 (JSON)</button>
+          <button id="btnImportData" class="btn btn-secondary btn-sm">📂 데이터 복원 불러오기</button>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+          <button id="btnResetData" class="btn btn-outline btn-sm" style="color:var(--danger-500); border-color:rgba(239,68,68,0.3); margin-left:auto;">
+            ⚠️ 초기화
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div>6000 Essential English Words - Daily 20 Words Vocabulary & Testing System</div>
+    <div style="margin-top:0.3rem; color:var(--text-muted); font-size:0.75rem;">Level 1: Daily Essential (1~2000) | Level 2: Books & Media (2001~4000) | Level 3: Academic Papers (4001~6000)</div>
+  </footer>
+
+  <!-- MODAL 1: Day Select Grid Modal -->
+  <div id="dayModalOverlay" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:1.2rem; font-weight:700;">학습 날짜 선택 (Day 1 ~ Day 300)</h3>
+        <button id="closeDayModalBtn" class="btn-icon" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="dayGridModal" class="matrix-grid" style="max-height:60vh;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Dictionary Search Modal -->
+  <div id="searchModalOverlay" class="modal-overlay">
+    <div class="modal-box" style="max-width:750px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.2rem; font-weight:700;">🔍 6,000 단어 사전 검색</h3>
+        <button id="closeSearchModalBtn" class="btn-icon" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="search-input-box">
+          <span class="search-icon-inside">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="영단어 또는 한글 뜻 입력 (예: ability, 능력, absorb...)" />
+        </div>
+        <div id="searchResultsContainer" style="max-height:55vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App JavaScript Files -->
+  <script src="js/data/words-level1.js"></script>
+  <script src="js/data/words-level2.js"></script>
+  <script src="js/data/words-level3.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/study.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
